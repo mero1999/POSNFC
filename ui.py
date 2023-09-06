@@ -2,342 +2,43 @@
 #  -*- coding: utf-8 -*-
 
 import sys
-import socket
-import sqlite3
-import threading
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import DateEntry
 from tkinter.constants import *
+from support import *      
 
-
-class MyDB:
-    def __init__(self, db='testdb3.db'):
-        self.db = db
-        self.querie_db('''
-            CREATE TABLE IF NOT EXISTS "Customers" (
-                "ID"	INTEGER NOT NULL UNIQUE,
-                "HouseID"	TEXT NOT NULL,
-                "CardID"	TEXT,
-                "Name"	TEXT NOT NULL,
-                "DOB"	DATE,
-                "Number"	TEXT NOT NULL,
-                "CreditLimit"	INTEGER NOT NULL DEFAULT 0,
-                "Balance"	INTEGER NOT NULL DEFAULT 0,
-                "MPoints"	INTEGER DEFAULT 0,
-                PRIMARY KEY("ID" AUTOINCREMENT));''')
-        
-        self.querie_db('''
-            CREATE TABLE IF NOT EXISTS "Users" (
-                "ID"	TEXT NOT NULL UNIQUE,
-                "Name"	TEXT NOT NULL,
-                "Privilege"	INTEGER NOT NULL,
-                PRIMARY KEY("ID"));''')
-        
-        self.querie_db('''
-            CREATE TABLE IF NOT EXISTS "Sales" (
-                "ID"	INTEGER NOT NULL UNIQUE,
-                "UserID"	INTEGER NOT NULL,
-                "CustomerID"	INTEGER NOT NULL,
-                "Amount"	INTEGER NOT NULL,
-                PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("UserID") REFERENCES "Users"("ID"),
-                FOREIGN KEY("CustomerID") REFERENCES "Customers"("ID"));''')
-        
-        self.querie_db('''
-            CREATE TABLE IF NOT EXISTS "Purchases" (
-                "ID"	INTEGER NOT NULL UNIQUE,
-                "UserID"	INTEGER NOT NULL,
-                "Amount"	INTEGER NOT NULL,
-                "Description"	TEXT NOT NULL,
-                PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("UserID") REFERENCES "Users"("ID"));''')
-
-        self.querie_db('''
-            CREATE TABLE IF NOT EXISTS "Stocks" (
-                "ID"	INTEGER NOT NULL UNIQUE,
-                "Item"	TEXT NOT NULL,
-                "Amount"	INTEGER NOT NULL,
-                PRIMARY KEY("ID" AUTOINCREMENT));''')
-        
-    def querie_db(self, query):
-        conn = sqlite3.connect(self.db)
-        cursor = conn.cursor()
-        cursor.execute(query)
-        reply = cursor.fetchall()
-        conn.commit()
-        conn.close()
-        return reply
-    
-    # Customers
-    def getCustomers(self):
-        query = '''SELECT * FROM Customers'''
-        return self.querie_db(query)
-    
-    def addCustomer(self, house_id, card_id, name, dob, number, credit_limit=0, balance=0, m_points=0):
-        query = f'''
-            INSERT INTO Customers (HouseID, CardID, Name, DOB, Number, CreditLimit, Balance, MPoints)
-            VALUES ('{house_id}', '{card_id}', '{name}', '{dob}', '{number}', {credit_limit}, {balance}, {m_points});
-        '''
-        self.querie_db(query)
-    
-    def editCustomer(self, customer_id, house_id, card_id, name, dob, number, credit_limit, balance, m_points):
-        query = f'''
-            UPDATE Customers
-            SET HouseID = '{house_id}', CardID = '{card_id}', Name = '{name}', DOB = '{dob}', Number = '{number}',
-                CreditLimit = {credit_limit}, Balance = {balance}, MPoints = {m_points}
-            WHERE ID = {customer_id};
-        '''
-        self.querie_db(query)
-    
-    def deleteCustomer(self, customer_id):
-        query = f'''
-            DELETE FROM Customers
-            WHERE ID = {customer_id};
-        '''
-        self.querie_db(query)
-    
-    def getCustomer(self, customer_id):
-        query = f'''
-            SELECT * FROM Customers
-            WHERE ID = {customer_id};
-        '''
-        return self.querie_db(query)
-    
-    # Users
-    def getUsers(self):
-        query = '''SELECT * FROM Users'''
-        return self.querie_db(query)
-    
-    def addUser(self, name, privilege):
-        query = f'''
-            INSERT INTO Users (Name, Privilege)
-            VALUES ('{name}', {privilege});
-        '''
-        self.querie_db(query)
-    
-    def editUser(self, user_id, name, privilege):
-        query = f'''
-            UPDATE Users
-            SET Name = '{name}', Privilege = {privilege}
-            WHERE ID = {user_id};
-        '''
-        self.querie_db(query)
-    
-    def deleteUser(self, user_id):
-        query = f'''
-            DELETE FROM Users
-            WHERE ID = {user_id};
-        '''
-        self.querie_db(query)
-    
-    def getUser(self, user_id):
-        query = f'''
-            SELECT * FROM Users
-            WHERE ID = {user_id};
-        '''
-        return self.querie_db(query)
-     # Sales
-    def getSales(self):
-        query = '''SELECT * FROM Sales'''
-        return self.querie_db(query)
-    
-    def addSale(self, user_id, customer_id, amount):
-        query = f'''
-            INSERT INTO Sales (UserID, CustomerID, Amount)
-            VALUES ({user_id}, {customer_id}, {amount});
-        '''
-        self.querie_db(query)
-
-    def editSale(self, sale_id, user_id, customer_id, amount):
-        query = f'''
-            UPDATE Sales
-            SET UserID = {user_id}, CustomerID = {customer_id}, Amount = {amount}
-            WHERE ID = {sale_id};
-        '''
-        self.querie_db(query)
-
-    def deleteSale(self, sale_id):
-        query = f'''
-            DELETE FROM Sales
-            WHERE ID = {sale_id};
-        '''
-        self.querie_db(query)
-
-    def getSale(self, sale_id):
-        query = f'''
-            SELECT * FROM Sales
-            WHERE ID = {sale_id};
-        '''
-        return self.querie_db(query)
-
-    # Purchases
-    def getPurchases(self):
-        query = '''SELECT * FROM Purchases'''
-        return self.querie_db(query)
-
-    def addPurchase(self, user_id, amount, description):
-        query = f'''
-            INSERT INTO Purchases (UserID, Amount, Description)
-            VALUES ({user_id}, {amount}, '{description}');
-        '''
-        self.querie_db(query)
-
-    def editPurchase(self, purchase_id, user_id, amount, description):
-        query = f'''
-            UPDATE Purchases
-            SET UserID = {user_id}, Amount = {amount}, Description = '{description}'
-            WHERE ID = {purchase_id};
-        '''
-        self.querie_db(query)
-
-    def deletePurchase(self, purchase_id):
-        query = f'''
-            DELETE FROM Purchases
-            WHERE ID = {purchase_id};
-        '''
-        self.querie_db(query)
-
-    def getPurchase(self, purchase_id):
-        query = f'''
-            SELECT * FROM Purchases
-            WHERE ID = {purchase_id};
-        '''
-        return self.querie_db(query)
-
-    # Stocks
-    def getStocks(self):
-        query = '''SELECT * FROM Stocks'''
-        return self.querie_db(query)
-
-    def addStock(self, item, amount):
-        query = f'''
-            INSERT INTO Stocks (Item, Amount)
-            VALUES ('{item}', {amount});
-        '''
-        self.querie_db(query)
-
-    def editStock(self, stock_id, item, amount):
-        query = f'''
-            UPDATE Stocks
-            SET Item = '{item}', Amount = {amount}
-            WHERE ID = {stock_id};
-        '''
-        self.querie_db(query)
-
-    def deleteStock(self, stock_id):
-        query = f'''
-            DELETE FROM Stocks
-            WHERE ID = {stock_id};
-        '''
-        self.querie_db(query)
-
-    def getStock(self, stock_id):
-        query = f'''
-            SELECT * FROM Stocks
-            WHERE ID = {stock_id};
-        '''
-        return self.querie_db(query)
-    
-class ScrolledFrame(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.canvas = tk.Canvas(self)
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.scrollbar.pack(side="right", fill="y")
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.frame = ttk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.frame, anchor="nw")
-        self.canvas.bind("<MouseWheel>", self.on_mousewheel)
-        self.update_scrollregion()
-        
-    def on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    def update_scrollregion(self):
-        self.frame.update_idletasks()
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
-
-class NFC():
-    def __init__(self):
-        self.server_ip = "192.168.1.105"  # Laptop's IP address
-        self.server_port = 20920  # Port used in NodeMCU code
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind((self.server_ip, self.server_port))
-        self.server_socket.listen()  # Listen for one connection
-        self.db = MyDB()
-        
-        self.known_nfc_data = self.db.getUsers()
-        for i in range(len(self.known_nfc_data)):
-            self.known_nfc_data[i] = self.known_nfc_data[i][0]
-        print(self.known_nfc_data)
-        
-        self.customers = self.db.getCustomers() #["4b2efaa10289", "data1"]
-        for i in range(len(self.customers)):
-            self.customers[i] = self.customers[i][2]
-            
-        self.start()
-
-    def verify_nfc_card(self, data):
-        self.known_nfc_data = self.db.getUsers()
-        for i in range(len(self.known_nfc_data)):
-            self.known_nfc_data[i] = self.known_nfc_data[i][0]
-        if data in self.known_nfc_data:
-            return True
-        return False
-    
-    def get_customer(self, data):
-        self.customers = self.db.getCustomers() #["4b2efaa10289", "data1"]
-        for i in range(len(self.customers)):
-            self.customers[i] = self.customers[i][2]
-        if data in self.customers:
-            return data
-        return False
-
-    def start(self):
-        threading.Thread(target=self.start_server).start()
-        
-    def start_server(self):
-        self.loggedin = False
-        while True:
-            try:
-                self.client_socket, self.client_address = self.server_socket.accept()
-                while True:
-                    self.data = self.client_socket.recv(1024).decode('utf-8').strip()
-                    if not self.data:
-                        break  # Exit the inner loop only if no more data is received
-                    #print("data:", self.data)
-                    if not self.loggedin and self.verify_nfc_card(self.data):
-                        self.loggedin = True
-                        print("Login successful!")
-                        
-                    elif self.loggedin and self.verify_nfc_card(self.data):
-                        self.loggedin = False
-                        print("logging out!")
-                        
-                    elif self.data == "Fail":
-                        print("NFC Module failure, restart!")
-
-                    elif self.data == "OK":
-                        print("NFC Module ready. Waiting for a known card...")
-                        
-                    elif self.loggedin and not (self.verify_nfc_card(self.data) or self.get_customer(self.data)):
-                        print("Unknown NFC card. Waiting for a known card...")
-                        #clear all Entries and show this data on CardEntry
-                        ##try adding a method in ui to modify the entries and pass the ui(self) as an argument for NFC 
-                        
-                    elif not self.loggedin and not self.verify_nfc_card(self.data):
-                        print("Unknown NFC card. Waiting for a known card...")
-
-                    elif self.loggedin and self.get_customer(self.data):
-                        print("Customer details: " + str(self.get_customer(self.data)))
-                        
-            except socket.error:
-                print("Error occurred while accepting connection. Retrying...")        
-
-class Toplevel1: 
+class Toplevel1:       
     def __init__(self, top=None):
+        #user/admin control initialization
+        self.user = None
+        self.admin = False
+        
+        #entry_vars
+        self.NameEntryText = tk.StringVar()
+        self.NameEntryText.set("name")
+        
+        self.HouseEntryText = tk.StringVar()
+        self.HouseEntryText.set("house")
+        
+        self.MPEntryText = tk.StringVar()
+        self.MPEntryText.set("M-Points")
+        
+        self.NumberEntryText = tk.StringVar()
+        self.NumberEntryText.set("Number")
+        
+        self.NLimitEntryText = tk.StringVar()
+        self.NLimitEntryText.set("Nlimit")
+        
+        self.BalanceEntryText = tk.StringVar()
+        self.BalanceEntryText.set("Balance")
+        
+        self.DOBEntryText = tk.StringVar()
+        self.DOBEntryText.set("DOB")
+        
+        self.CardEntryText = tk.StringVar()
+        self.CardEntryText.set("Card")
+
+        #B1,B2,B3,B5,B10,B15 = amount of 1,2,3,5,10,15 za2toot catigories in cart
         self.B1 = 0
         self.B2 = 0
         self.B3 = 0
@@ -345,25 +46,29 @@ class Toplevel1:
         self.B10 = 0
         self.B15 = 0
 
+        #sub1,sub2,sub3,sub5,sub10,sub15 = subtotals in cart
         self.sub1 = 0
         self.sub2 = 0
         self.sub3 = 0
         self.sub5 = 0
         self.sub10 = 0
         self.sub15 = 0
-
+        
+        #cart total
         self.total = 0
         
+        #init customer data
         self.UID = None
         self.Name = None
         self.House = None
         self.MP = None
         self.Number = None
         self.limit = None
-        self.Balance = 50
+        self.Balance = None
         self.DOB = None
-        self.Card = "ABDB"
+        self.Card = None
 
+        #init db and get all data
         self.db = MyDB()
         self.users = self.db.getUsers()
         self.customers = self.db.getCustomers()
@@ -371,25 +76,21 @@ class Toplevel1:
         self.purchases = self.db.getPurchases()
         self.sales = self.db.getSales()
         
-        print(self.users)
-        print(self.customers)
-        print(self.stocks)
-        print(self.purchases)
-        print(self.sales)
-
-        self.nfc = NFC()
+        #start NFC server
+        self.nfc = NFC(self)
         
+        #configure TopLevel
         top.geometry("1327x832+222+65")
         top.minsize(120, 1)
         top.maxsize(1924, 1061)
         top.resizable(1,  1)
-        top.title("Toplevel 0")
+        top.title("Monti-POS Cafeteria System")
         top.configure(background="#d9d9d9")
         top.configure(highlightbackground="#d9d9d9")
         top.configure(highlightcolor="black")
-
         self.top = top
-
+        
+        #UI starts here
         self.Frame1 = tk.Frame(self.top)
         self.Frame1.place(relx=0.009, rely=0.013, relheight=0.954
                 , relwidth=0.156)
@@ -482,8 +183,7 @@ class Toplevel1:
         self.z10.configure(text='''10 Za2toot''')
         
         self.z15 = tk.Button(self.Frame2)
-        self.z15.place(relx=0.066, rely=0.835, height=74
-                , width=137)
+        self.z15.place(relx=0.066, rely=0.835, height=74, width=137)
         self.z15.configure(activebackground="beige")
         self.z15.configure(activeforeground="black")
         self.z15.configure(background="#d9d9d9")
@@ -523,8 +223,7 @@ class Toplevel1:
         self.ItemsLabel.configure(text='''Items''')
         
         self.CartFrame = tk.Frame(self.top)
-        self.CartFrame.place(relx=0.169, rely=0.013, relheight=0.954
-                , relwidth=0.126)
+        self.CartFrame.place(relx=0.169, rely=0.013, relheight=0.954, relwidth=0.126)
         self.CartFrame.configure(relief='groove')
         self.CartFrame.configure(borderwidth="2")
         self.CartFrame.configure(relief="groove")
@@ -930,9 +629,8 @@ class Toplevel1:
         self.CardLabel.configure(text='''Card:''')
 
 
-        ''' Entries Bellow >>>'''
-        
-        self.NameEntry = tk.Entry(self.CustomerDetailsFrame)
+        # Entries Start >>>
+        self.NameEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.NameEntryText)
         self.NameEntry.place(relx=0.214, rely=0.109, height=20, relwidth=0.622)
         self.NameEntry.configure(background="white")
         self.NameEntry.configure(disabledforeground="#a3a3a3")
@@ -943,8 +641,9 @@ class Toplevel1:
         self.NameEntry.configure(insertbackground="black")
         self.NameEntry.configure(selectbackground="#c4c4c4")
         self.NameEntry.configure(selectforeground="black")
+        self.NameEntry.configure(state="disabled")
         
-        self.HouseEntry = tk.Entry(self.CustomerDetailsFrame)
+        self.HouseEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.HouseEntryText)
         self.HouseEntry.place(relx=0.214, rely=0.217, height=20, relwidth=0.233)
         self.HouseEntry.configure(background="white")
         self.HouseEntry.configure(disabledforeground="#a3a3a3")
@@ -955,8 +654,9 @@ class Toplevel1:
         self.HouseEntry.configure(insertbackground="black")
         self.HouseEntry.configure(selectbackground="#c4c4c4")
         self.HouseEntry.configure(selectforeground="black")
+        self.HouseEntry.configure(state="disabled")
         
-        self.MPEntry = tk.Entry(self.CustomerDetailsFrame)
+        self.MPEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.MPEntryText)
         self.MPEntry.place(relx=0.214, rely=0.318, height=20, relwidth=0.233)
         self.MPEntry.configure(background="white")
         self.MPEntry.configure(disabledforeground="#a3a3a3")
@@ -967,8 +667,9 @@ class Toplevel1:
         self.MPEntry.configure(insertbackground="black")
         self.MPEntry.configure(selectbackground="#c4c4c4")
         self.MPEntry.configure(selectforeground="black")
+        self.MPEntry.configure(state="disabled")
         
-        self.NumberEntry = tk.Entry(self.CustomerDetailsFrame)
+        self.NumberEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.NumberEntryText)
         self.NumberEntry.place(relx=0.214, rely=0.419, height=20, relwidth=0.456)
         self.NumberEntry.configure(background="white")
         self.NumberEntry.configure(disabledforeground="#a3a3a3")
@@ -979,8 +680,9 @@ class Toplevel1:
         self.NumberEntry.configure(insertbackground="black")
         self.NumberEntry.configure(selectbackground="#c4c4c4")
         self.NumberEntry.configure(selectforeground="black")
+        self.NumberEntry.configure(state="disabled")
         
-        self.NLimit = tk.Entry(self.CustomerDetailsFrame)
+        self.NLimit = tk.Entry(self.CustomerDetailsFrame, textvariable=self.NLimitEntryText)
         self.NLimit.place(relx=0.214, rely=0.527, height=20, relwidth=0.233)
         self.NLimit.configure(background="white")
         self.NLimit.configure(disabledforeground="#a3a3a3")
@@ -991,8 +693,9 @@ class Toplevel1:
         self.NLimit.configure(insertbackground="black")
         self.NLimit.configure(selectbackground="#c4c4c4")
         self.NLimit.configure(selectforeground="black")
+        self.NLimit.configure(state="disabled")
         
-        self.BalanceEntry = tk.Entry(self.CustomerDetailsFrame)
+        self.BalanceEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.BalanceEntryText)
         self.BalanceEntry.place(relx=0.214, rely=0.632, height=20, relwidth=0.233)
         self.BalanceEntry.configure(background="white")
         self.BalanceEntry.configure(disabledforeground="#a3a3a3")
@@ -1003,12 +706,13 @@ class Toplevel1:
         self.BalanceEntry.configure(insertbackground="black")
         self.BalanceEntry.configure(selectbackground="#c4c4c4")
         self.BalanceEntry.configure(selectforeground="black")
+        self.BalanceEntry.configure(state="disabled")
         
-        self.DOBEntry = DateEntry(self.CustomerDetailsFrame)
+        self.DOBEntry = DateEntry(self.CustomerDetailsFrame, textvariable=self.DOBEntryText)
         self.DOBEntry.place(relx=0.214, rely=0.74, height=20, relwidth=0.233)
         self.DOBEntry.configure(state="disabled")
         
-        self.CardEntry = tk.Entry(self.CustomerDetailsFrame)
+        self.CardEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.CardEntryText)
         self.CardEntry.place(relx=0.214, rely=0.849, height=20, relwidth=0.233)
         self.CardEntry.configure(background="white")
         self.CardEntry.configure(disabledforeground="#a3a3a3")
@@ -1020,8 +724,7 @@ class Toplevel1:
         self.CardEntry.configure(selectbackground="#c4c4c4")
         self.CardEntry.configure(selectforeground="black")
         self.CardEntry.configure(state="disabled")
-
-        '''<<< entries finished'''
+        #entries finished
         
         self.CDLabel = tk.Label(self.CustomerFrame)
         self.CDLabel.place(relx=0.306, rely=0.013, height=23, width=135)
@@ -1047,7 +750,7 @@ class Toplevel1:
         self.EditButton.configure(highlightbackground="#d9d9d9")
         self.EditButton.configure(highlightcolor="black")
         self.EditButton.configure(pady="0")
-        self.EditButton.configure(text='''Edit''')
+        self.EditButton.configure(text='''Edit Customer''')
         
         self.AddButton = tk.Button(self.CustomerFrame)
         self.AddButton.place(relx=0.031, rely=0.384, height=44, width=97)
@@ -1061,7 +764,7 @@ class Toplevel1:
         self.AddButton.configure(highlightbackground="#d9d9d9")
         self.AddButton.configure(highlightcolor="black")
         self.AddButton.configure(pady="0")
-        self.AddButton.configure(text='''Add''')
+        self.AddButton.configure(text='''Add Customer''')
         
         self.DeleteButton = tk.Button(self.CustomerFrame)
         self.DeleteButton.place(relx=0.665, rely=0.384, height=44, width=97)
@@ -1075,7 +778,7 @@ class Toplevel1:
         self.DeleteButton.configure(highlightbackground="#d9d9d9")
         self.DeleteButton.configure(highlightcolor="black")
         self.DeleteButton.configure(pady="0")
-        self.DeleteButton.configure(text='''Delete''')
+        self.DeleteButton.configure(text='''Delete Customer''')
         
         self.TopUPButton = tk.Button(self.CustomerFrame)
         self.TopUPButton.place(relx=0.665, rely=0.452, height=44, width=97)
@@ -1175,36 +878,36 @@ class Toplevel1:
         self.SalesLabel.configure(foreground="#000000")
         self.SalesLabel.configure(text='''Stock''')
         
-        self.PurchasesFrame = tk.Frame(self.top)
-        self.PurchasesFrame.place(relx=0.81, rely=0.013, relheight=0.954, relwidth=0.182)
-        self.PurchasesFrame.configure(relief='groove')
-        self.PurchasesFrame.configure(borderwidth="2")
-        self.PurchasesFrame.configure(relief="groove")
-        self.PurchasesFrame.configure(background="#d9d9d9")
+        self.LogFrame = tk.Frame(self.top)
+        self.LogFrame.place(relx=0.81, rely=0.013, relheight=0.954, relwidth=0.182)
+        self.LogFrame.configure(relief='groove')
+        self.LogFrame.configure(borderwidth="2")
+        self.LogFrame.configure(relief="groove")
+        self.LogFrame.configure(background="#d9d9d9")
         
-        self.PurchasesLabel = tk.Label(self.PurchasesFrame)
-        self.PurchasesLabel.place(relx=0.39, rely=0.013, height=23, width=88)
-        self.PurchasesLabel.configure(anchor='w')
-        self.PurchasesLabel.configure(background="#d9d9d9")
-        self.PurchasesLabel.configure(compound='left')
-        self.PurchasesLabel.configure(disabledforeground="#a3a3a3")
-        self.PurchasesLabel.configure(foreground="#000000")
-        self.PurchasesLabel.configure(text='''Log''')
+        self.LogLabel = tk.Label(self.LogFrame)
+        self.LogLabel.place(relx=0.39, rely=0.013, height=23, width=88)
+        self.LogLabel.configure(anchor='w')
+        self.LogLabel.configure(background="#d9d9d9")
+        self.LogLabel.configure(compound='left')
+        self.LogLabel.configure(disabledforeground="#a3a3a3")
+        self.LogLabel.configure(foreground="#000000")
+        self.LogLabel.configure(text='''Log''')
         
-        self.PurchasesList = ScrolledFrame(self.PurchasesFrame)
-        self.PurchasesList.place(relx=0.05, rely=0.053, relheight=0.935, relwidth=0.905)
-        self.PurchasesList.configure(relief='groove')
-        self.PurchasesList.configure(borderwidth="2")
-        self.PurchasesList.configure(relief="groove")
-        self.PurchasesList.configure(background="#d9d9d9")
+        self.LogList = ScrolledFrame(self.LogFrame)
+        self.LogList.place(relx=0.05, rely=0.053, relheight=0.935, relwidth=0.905)
+        self.LogList.configure(relief='groove')
+        self.LogList.configure(borderwidth="2")
+        self.LogList.configure(relief="groove")
+        self.LogList.configure(background="#d9d9d9")
 
         '''
-        ##PurchasesList test
+        ##LogList test
         for i in range(50):
-            self.labell = ttk.Label(self.PurchasesList.frame, text=f"Label {i}")
+            self.labell = ttk.Label(self.LogList.frame, text=f"Label {i}")
             self.labell.pack(padx=10, pady=5)
             
-        self.PurchasesList.update_scrollregion()
+        self.LogList.update_scrollregion()
         '''
         
     def Add_Card(self,*args):
@@ -1249,7 +952,7 @@ class Toplevel1:
                 print ('	another arg:', arg)
             sys.stdout.flush()
 
-    def Pay(self,*args):
+    def Pay(self):
         if self.Card:
             if self.Balance >= self.total:
                 self.Balance -= self.total
@@ -1260,16 +963,15 @@ class Toplevel1:
                 print("not enough balance!")
         else:
             print("no card!")
-                
-            
-    def TopUP(self,*args):
+                          
+    def TopUP(self):
         if _debug:
             print('UI_self.TopUP')
             for arg in args:
                 print ('	another arg:', arg)
             sys.stdout.flush()
 
-    def Reset(self,*args):
+    def Reset(self):
         self.B1, self.B2, self.B3, self.B5, self.B10, self.B15 = 0,0,0,0,0,0
         self.sub1, self.sub2, self.sub3, self.sub5, self.sub10, self.sub15 = 0,0,0,0,0,0
         self.update_total()
@@ -1303,7 +1005,7 @@ class Toplevel1:
         t = "Total: " + str(self.total)
         self.TotalLabel.configure(text= t)
    
-    def Za2ateet1(self,*args):
+    def Za2ateet1(self):
         self.B1 += 1
         t = "X   "+str(self.B1)
         self.Z1AmountLabel.configure(text=t)
@@ -1312,7 +1014,7 @@ class Toplevel1:
         self.Z1SubtotalLabel.configure(text= t)
         self.update_total()
 
-    def Za2ateet2(self,*args):
+    def Za2ateet2(self):
         self.B2 += 1
         t = "X   "+str(self.B2)
         self.Z2AmountLabel.configure(text=t)
@@ -1321,7 +1023,7 @@ class Toplevel1:
         self.Z2SubtotalLabel.configure(text= t)
         self.update_total()
 
-    def Za2ateet3(self,*args):
+    def Za2ateet3(self):
         self.B3 += 1
         t = "X   "+str(self.B3)
         self.Z3AmountLabel.configure(text=t)
@@ -1330,7 +1032,7 @@ class Toplevel1:
         self.Z3SubtotalLabel.configure(text= t)
         self.update_total()
             
-    def Za2ateet5(self,*args):
+    def Za2ateet5(self):
         self.B5 += 1
         t = "X   "+str(self.B5)
         self.Z5AmountLabel.configure(text=t)
@@ -1339,7 +1041,7 @@ class Toplevel1:
         self.Z5SubtotalLabel.configure(text= t)
         self.update_total()
 
-    def Za2ateet10(self,*args):
+    def Za2ateet10(self):
         self.B10 += 1
         t = "X   "+str(self.B10)
         self.Z10AmountLabel.configure(text=t)
@@ -1348,7 +1050,7 @@ class Toplevel1:
         self.Z10SubtotalLabel.configure(text= t)
         self.update_total()
 
-    def Za2ateet15(self,*args):
+    def Za2ateet15(self):
         self.B15 += 1
         t = "X   "+str(self.B15)
         self.Z15AmountLabel.configure(text=t)
@@ -1357,7 +1059,7 @@ class Toplevel1:
         self.Z15SubtotalLabel.configure(text= t)
         self.update_total()
 
-    def Za2ateet1n(self,*args):
+    def Za2ateet1n(self):
         if self.B1 > 0:
             self.B1 -= 1
             t = "X   "+str(self.B1)
@@ -1367,7 +1069,7 @@ class Toplevel1:
             self.Z1SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet2n(self,*args):
+    def Za2ateet2n(self):
         if self.B2 > 0:
             self.B2 -= 1
             t = "X   "+str(self.B2)
@@ -1377,7 +1079,7 @@ class Toplevel1:
             self.Z2SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet3n(self,*args):
+    def Za2ateet3n(self):
         if self.B3 > 0:
             self.B3 -= 1
             t = "X   "+str(self.B3)
@@ -1387,7 +1089,7 @@ class Toplevel1:
             self.Z3SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet5n(self,*args):
+    def Za2ateet5n(self):
         if self.B5 > 0:
             self.B5 -= 1
             t = "X   "+str(self.B5)
@@ -1397,7 +1099,7 @@ class Toplevel1:
             self.Z5SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet10n(self,*args):
+    def Za2ateet10n(self):
         if self.B10 > 0:
             self.B10 -= 1
             t = "X   "+str(self.B10)
@@ -1407,7 +1109,7 @@ class Toplevel1:
             self.Z10SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet15n(self,*args):
+    def Za2ateet15n(self):
         if self.B15 > 0:
             self.B15 -= 1
             t = "X   "+str(self.B15)
@@ -1417,8 +1119,52 @@ class Toplevel1:
             self.Z15SubtotalLabel.configure(text= t)
             self.update_total()
 
+    def NFClogin(self, card, admin):
+        self.user = card
+        if admin:
+            self.admin = True
+        self.Logger(f"user: {self.user} logged in\nadmin: {self.admin}")
             
+    def NFClogout(self):
+        self.Logger(f"user: {self.user} logged out!")
+        self.user == None
+        self.admin = False
+        
+    def NFCRegisterCard(self, card):
+        self.CardEntryText.set(card) 
+        self.Card = card
+        self.Logger(f"new card: {self.Card}")
 
+    def NFCcustomer(self, args):
+        
+        self.UID = args[0]
+        self.Name = args[3]
+        self.House = args[1]
+        self.MP = args[8]
+        self.Number = args[5]
+        self.limit = args[6]
+        self.Balance = args[7]
+        self.DOB = args[4]
+        self.Card = args[2]
+        
+        self.Logger(f"Customer {self.UID} scanned his card!")
+        
+        self.NameEntryText.set(self.Name)
+        self.HouseEntryText.set(self.House)
+        self.MPEntryText.set(self.MP)  
+        self.NumberEntryText.set(self.Number)
+        self.NLimitEntryText.set(self.limit)
+        self.BalanceEntryText.set(self.Balance)
+        self.DOBEntryText.set(self.DOB)
+        self.CardEntryText.set(self.Card)            
+
+    def Logger(self, message):
+        #+ fix scrollable frame to to have newest on top and to scroll down when needed
+        #implement logger function to save logs to a db table
+        self.labell = ttk.Label(self.LogList.frame, text=message)
+        self.labell.pack(padx=10, pady=5) 
+        self.LogList.update_scrollregion()
+    
 if __name__ == '__main__':
     _debug = True
     root = tk.Tk()
@@ -1426,4 +1172,3 @@ if __name__ == '__main__':
     _top1 = root
     _w1 = Toplevel1(_top1)
     root.mainloop()
-
