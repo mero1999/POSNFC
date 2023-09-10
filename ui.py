@@ -1,12 +1,14 @@
 #! /usr/bin/env python3
 #  -*- coding: utf-8 -*-
 
-import sys
+
 import tkinter as tk
+from datetime import datetime
 from tkinter import simpledialog
 from tkcalendar import DateEntry
 from tkinter.constants import *
 from support import *      
+
     
 class Toplevel1:       
     def __init__(self, top=None):
@@ -23,7 +25,10 @@ class Toplevel1:
         self.BalanceEntryText = tk.StringVar()
         self.DOBEntryText = tk.StringVar()
         self.CardEntryText = tk.StringVar()
+        self.Order = tk.StringVar()
 
+        
+        
         #B1,B2,B3,B5,B10,B15 = amount of 1,2,3,5,10,15 za2toot catigories in cart
         self.B1 = 0
         self.B2 = 0
@@ -55,12 +60,16 @@ class Toplevel1:
         self.Card = None
 
         #init db and get all data
-        self.db = MyDB()
+        self.db = MyDB(self)
         self.users = self.db.getUsers()
         self.customers = self.db.getCustomers()
         self.stocks = self.db.getStocks()
         self.purchases = self.db.getPurchases()
-        self.sales = self.db.getSales()
+        
+        #Menue / Reciept init
+        self.reciept = ""
+        self.values = {}
+        self.stocks = self.db.getStocks()
         
         #start NFC server
         self.nfc = NFC(self)
@@ -71,7 +80,7 @@ class Toplevel1:
         top.maxsize(1924, 1061)
         top.resizable(1,  1)
         top.title("Monti-POS Cafeteria System")
-        top.configure(background="#d9d9d9")
+        top.configure(background="Black")
         top.configure(highlightbackground="#d9d9d9")
         top.configure(highlightcolor="black")
         self.top = top
@@ -79,142 +88,68 @@ class Toplevel1:
         
         #UI starts here
         self.Frame1 = tk.Frame(self.top)
-        self.Frame1.place(relx=0.009, rely=0.013, relheight=0.954
-                , relwidth=0.156)
+        self.Frame1.place(relx=0.009, rely=0.013, relheight=0.954, relwidth=0.156)
         self.Frame1.configure(relief='groove')
         self.Frame1.configure(borderwidth="2")
         self.Frame1.configure(relief="groove")
-        self.Frame1.configure(background="#d9d9d9")
+        self.Frame1.configure(background="black")
         self.Frame1.configure(highlightbackground="#d9d9d9")
         self.Frame1.configure(highlightcolor="black")
         
         self.Frame2 = tk.Frame(self.Frame1)
-        self.Frame2.place(relx=0.058, rely=0.053, relheight=0.841
-                , relwidth=0.884)
+        self.Frame2.place(relx=0.058, rely=0.053, relheight=0.841, relwidth=0.884)
         self.Frame2.configure(relief='groove')
         self.Frame2.configure(borderwidth="2")
         self.Frame2.configure(relief="groove")
-        self.Frame2.configure(background="#d9d9d9")
+        self.Frame2.configure(background="black")
         self.Frame2.configure(highlightbackground="#d9d9d9")
         self.Frame2.configure(highlightcolor="black")
         
-        self.z1 = tk.Button(self.Frame2)
-        self.z1.place(relx=0.066, rely=0.046, height=74, width=137)
-        self.z1.configure(activebackground="beige")
-        self.z1.configure(activeforeground="black")
-        self.z1.configure(background="#d9d9d9")
+        self.z1 = HoverButton(self.Frame2)
+        self.z1.place(relx=0.115, rely=0.046, height=74, width=137)
         self.z1.configure(command=self.Za2ateet1)
-        self.z1.configure(compound='left')
-        self.z1.configure(disabledforeground="#a3a3a3")
-        self.z1.configure(foreground="#000000")
-        self.z1.configure(highlightbackground="#d9d9d9")
-        self.z1.configure(highlightcolor="black")
-        self.z1.configure(pady="0")
         self.z1.configure(text='''1 Za2toot''')
         
-        self.z2 = tk.Button(self.Frame2)
-        self.z2.place(relx=0.066, rely=0.205, height=74, width=137)
-        self.z2.configure(activebackground="beige")
-        self.z2.configure(activeforeground="black")
-        self.z2.configure(background="#d9d9d9")
+        self.z2 = HoverButton(self.Frame2)
+        self.z2.place(relx=0.115, rely=0.205, height=74, width=137)
         self.z2.configure(command=self.Za2ateet2)
-        self.z2.configure(compound='left')
-        self.z2.configure(disabledforeground="#a3a3a3")
-        self.z2.configure(foreground="#000000")
-        self.z2.configure(highlightbackground="#d9d9d9")
-        self.z2.configure(highlightcolor="black")
-        self.z2.configure(pady="0")
         self.z2.configure(text='''2 Za2toot''')
         
-        self.z3 = tk.Button(self.Frame2)
-        self.z3.place(relx=0.066, rely=0.362, height=74, width=137)
-        self.z3.configure(activebackground="beige")
-        self.z3.configure(activeforeground="black")
-        self.z3.configure(background="#d9d9d9")
+        self.z3 = HoverButton(self.Frame2)
+        self.z3.place(relx=0.115, rely=0.362, height=74, width=137)
         self.z3.configure(command=self.Za2ateet3)
-        self.z3.configure(compound='left')
-        self.z3.configure(disabledforeground="#a3a3a3")
-        self.z3.configure(foreground="#000000")
-        self.z3.configure(highlightbackground="#d9d9d9")
-        self.z3.configure(highlightcolor="black")
-        self.z3.configure(pady="0")
         self.z3.configure(text='''3 Za2toot''')
         
-        self.z5 = tk.Button(self.Frame2)
-        self.z5.place(relx=0.066, rely=0.519, height=74, width=137)
-        self.z5.configure(activebackground="beige")
-        self.z5.configure(activeforeground="black")
-        self.z5.configure(background="#d9d9d9")
+        self.z5 = HoverButton(self.Frame2)
+        self.z5.place(relx=0.115, rely=0.519, height=74, width=137)
         self.z5.configure(command=self.Za2ateet5)
-        self.z5.configure(compound='left')
-        self.z5.configure(cursor="fleur")
-        self.z5.configure(disabledforeground="#a3a3a3")
-        self.z5.configure(foreground="#000000")
-        self.z5.configure(highlightbackground="#d9d9d9")
-        self.z5.configure(highlightcolor="black")
-        self.z5.configure(pady="0")
         self.z5.configure(text='''5 Za2toot''')
         
-        self.z10 = tk.Button(self.Frame2)
-        self.z10.place(relx=0.066, rely=0.677, height=74, width=137)
-        self.z10.configure(activebackground="beige")
-        self.z10.configure(activeforeground="black")
-        self.z10.configure(background="#d9d9d9")
+        self.z10 = HoverButton(self.Frame2)
+        self.z10.place(relx=0.115, rely=0.677, height=74, width=137)
         self.z10.configure(command=self.Za2ateet10)
-        self.z10.configure(compound='left')
-        self.z10.configure(disabledforeground="#a3a3a3")
-        self.z10.configure(foreground="#000000")
-        self.z10.configure(highlightbackground="#d9d9d9")
-        self.z10.configure(highlightcolor="black")
-        self.z10.configure(pady="0")
         self.z10.configure(text='''10 Za2toot''')
         
-        self.z15 = tk.Button(self.Frame2)
-        self.z15.place(relx=0.066, rely=0.835, height=74, width=137)
-        self.z15.configure(activebackground="beige")
-        self.z15.configure(activeforeground="black")
-        self.z15.configure(background="#d9d9d9")
+        self.z15 = HoverButton(self.Frame2)
+        self.z15.place(relx=0.115, rely=0.835, height=74, width=137)
         self.z15.configure(command=self.Za2ateet15)
-        self.z15.configure(compound='left')
-        self.z15.configure(disabledforeground="#a3a3a3")
-        self.z15.configure(foreground="#000000")
-        self.z15.configure(highlightbackground="#d9d9d9")
-        self.z15.configure(highlightcolor="black")
-        self.z15.configure(pady="0")
         self.z15.configure(text='''15 Za2toot''')
         
-        self.BuyButton = tk.Button(self.Frame1)
-        self.BuyButton.place(relx=0.058, rely=0.901, height=64, width=157)
-        self.BuyButton.configure(activebackground="beige")
-        self.BuyButton.configure(activeforeground="black")
-        self.BuyButton.configure(background="#d9d9d9")
+        self.BuyButton = HoverButton(self.Frame1, overrelief='groove')
+        self.BuyButton.place(relx=0.065, rely=0.901, height=64, width=175)
         self.BuyButton.configure(command=self.BUY)
-        self.BuyButton.configure(compound='left')
-        self.BuyButton.configure(disabledforeground="#a3a3a3")
-        self.BuyButton.configure(foreground="#000000")
-        self.BuyButton.configure(highlightbackground="#d9d9d9")
-        self.BuyButton.configure(highlightcolor="black")
-        self.BuyButton.configure(pady="0")
         self.BuyButton.configure(text='''Buy''')
         
-        self.ItemsLabel = tk.Label(self.Frame1)
-        self.ItemsLabel.place(relx=0.401, rely=0.013, height=23, width=40)
-        self.ItemsLabel.configure(activebackground="#f9f9f9")
-        self.ItemsLabel.configure(anchor='w')
-        self.ItemsLabel.configure(background="#d9d9d9")
-        self.ItemsLabel.configure(compound='left')
-        self.ItemsLabel.configure(disabledforeground="#a3a3a3")
-        self.ItemsLabel.configure(foreground="#000000")
-        self.ItemsLabel.configure(highlightbackground="#d9d9d9")
-        self.ItemsLabel.configure(highlightcolor="black")
-        self.ItemsLabel.configure(text='''Items''')
+        self.ItemsLabel = Label(self.Frame1)
+        self.ItemsLabel.place(relx=0.335, rely=0.013, height=30, width=80)
+        self.ItemsLabel.configure(text='''Specials''')
         
         self.CartFrame = tk.Frame(self.top)
         self.CartFrame.place(relx=0.169, rely=0.013, relheight=0.954, relwidth=0.126)
         self.CartFrame.configure(relief='groove')
         self.CartFrame.configure(borderwidth="2")
         self.CartFrame.configure(relief="groove")
-        self.CartFrame.configure(background="#d9d9d9")
+        self.CartFrame.configure(background="black")
         self.CartFrame.configure(highlightbackground="#d9d9d9")
         self.CartFrame.configure(highlightcolor="black")
         
@@ -223,282 +158,173 @@ class Toplevel1:
         self.SubtotalFrame.configure(relief='groove')
         self.SubtotalFrame.configure(borderwidth="2")
         self.SubtotalFrame.configure(relief="groove")
-        self.SubtotalFrame.configure(background="#d9d9d9")
+        self.SubtotalFrame.configure(background="black")
         self.SubtotalFrame.configure(highlightbackground="#d9d9d9")
         self.SubtotalFrame.configure(highlightcolor="black")
         
-        self.Z1AmountLabel = tk.Label(self.SubtotalFrame)
-        self.Z1AmountLabel.place(relx=0.081, rely=0.079, height=22, width=40)
-        self.Z1AmountLabel.configure(anchor='w')
-        self.Z1AmountLabel.configure(background="#d9d9d9")
-        self.Z1AmountLabel.configure(compound='left')
-        self.Z1AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z1AmountLabel.configure(foreground="#000000")
-        self.Z1AmountLabel.configure(text='''X   0''')   
+        self.Z1AmountLabel = Label(self.SubtotalFrame)
+        self.Z1AmountLabel.place(relx=0.081, rely=0.079, height=23, width=40)
+        self.Z1AmountLabel.configure(text='''X   0''')  
+        self.Z1AmountLabel.configure(font=("forte", 10))  
         
-        self.Z2AmountLabel = tk.Label(self.SubtotalFrame)
-        self.Z2AmountLabel.place(relx=0.081, rely=0.237, height=22, width=40)
-        self.Z2AmountLabel.configure(activebackground="#f9f9f9")
-        self.Z2AmountLabel.configure(anchor='w')
-        self.Z2AmountLabel.configure(background="#d9d9d9")
-        self.Z2AmountLabel.configure(compound='left')
-        self.Z2AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z2AmountLabel.configure(foreground="#000000")
-        self.Z2AmountLabel.configure(highlightbackground="#d9d9d9")
-        self.Z2AmountLabel.configure(highlightcolor="black")
+        self.Z2AmountLabel = Label(self.SubtotalFrame)
+        self.Z2AmountLabel.place(relx=0.081, rely=0.237, height=23, width=40)
         self.Z2AmountLabel.configure(text='''X   0''')
+        self.Z2AmountLabel.configure(font=("forte", 10)) 
         
-        self.Z3AmountLabel = tk.Label(self.SubtotalFrame)
-        self.Z3AmountLabel.place(relx=0.081, rely=0.394, height=22, width=40)
-        self.Z3AmountLabel.configure(activebackground="#f9f9f9")
-        self.Z3AmountLabel.configure(anchor='w')
-        self.Z3AmountLabel.configure(background="#d9d9d9")
-        self.Z3AmountLabel.configure(compound='left')
-        self.Z3AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z3AmountLabel.configure(foreground="#000000")
-        self.Z3AmountLabel.configure(highlightbackground="#d9d9d9")
-        self.Z3AmountLabel.configure(highlightcolor="black")
+        self.Z3AmountLabel = Label(self.SubtotalFrame)
+        self.Z3AmountLabel.place(relx=0.081, rely=0.394, height=23, width=40)
         self.Z3AmountLabel.configure(text='''X   0''')
+        self.Z3AmountLabel.configure(font=("forte", 10)) 
         
-        self.Z5AmountLabel = tk.Label(self.SubtotalFrame)
-        self.Z5AmountLabel.place(relx=0.081, rely=0.551, height=22, width=40)
-        self.Z5AmountLabel.configure(activebackground="#f9f9f9")
-        self.Z5AmountLabel.configure(anchor='w')
-        self.Z5AmountLabel.configure(background="#d9d9d9")
-        self.Z5AmountLabel.configure(compound='left')
-        self.Z5AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z5AmountLabel.configure(foreground="#000000")
-        self.Z5AmountLabel.configure(highlightbackground="#d9d9d9")
-        self.Z5AmountLabel.configure(highlightcolor="black")
+        self.Z5AmountLabel = Label(self.SubtotalFrame)
+        self.Z5AmountLabel.place(relx=0.081, rely=0.551, height=23, width=40)
         self.Z5AmountLabel.configure(text='''X   0''')
+        self.Z5AmountLabel.configure(font=("forte", 10)) 
         
-        self.Z10AmountLabel = tk.Label(self.SubtotalFrame)
-        self.Z10AmountLabel.place(relx=0.081, rely=0.71, height=22, width=40)
-        self.Z10AmountLabel.configure(activebackground="#f9f9f9")
-        self.Z10AmountLabel.configure(anchor='w')
-        self.Z10AmountLabel.configure(background="#d9d9d9")
-        self.Z10AmountLabel.configure(compound='left')
-        self.Z10AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z10AmountLabel.configure(foreground="#000000")
-        self.Z10AmountLabel.configure(highlightbackground="#d9d9d9")
-        self.Z10AmountLabel.configure(highlightcolor="black")
+        self.Z10AmountLabel = Label(self.SubtotalFrame)
+        self.Z10AmountLabel.place(relx=0.081, rely=0.71, height=23, width=40)
         self.Z10AmountLabel.configure(text='''X   0''')
+        self.Z10AmountLabel.configure(font=("forte", 10)) 
         
-        self.Z15AmountLabel = tk.Label(self.SubtotalFrame)
+        self.Z15AmountLabel = Label(self.SubtotalFrame)
         self.Z15AmountLabel.place(relx=0.081, rely=0.865, height=23, width=40)
-        self.Z15AmountLabel.configure(activebackground="#f9f9f9")
-        self.Z15AmountLabel.configure(anchor='w')
-        self.Z15AmountLabel.configure(background="#d9d9d9")
-        self.Z15AmountLabel.configure(compound='left')
-        self.Z15AmountLabel.configure(disabledforeground="#a3a3a3")
-        self.Z15AmountLabel.configure(foreground="#000000")
-        self.Z15AmountLabel.configure(highlightbackground="#d9d9d9")
-        self.Z15AmountLabel.configure(highlightcolor="black")
         self.Z15AmountLabel.configure(text='''X   0''')
+        self.Z15AmountLabel.configure(font=("forte", 10)) 
 
-        self.Z1SubtotalLabel = tk.Label(self.SubtotalFrame)
-        self.Z1SubtotalLabel.place(relx=0.081, rely=0.109, height=23, width=87)
-        self.Z1SubtotalLabel.configure(anchor='w')
-        self.Z1SubtotalLabel.configure(background="#d9d9d9")
-        self.Z1SubtotalLabel.configure(compound='left')
-        self.Z1SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z1SubtotalLabel.configure(foreground="#000000")
+        self.Z1SubtotalLabel = Label(self.SubtotalFrame)
         self.Z1SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z1SubtotalLabel.place(relx=0.081, rely=0.115, height=22, width=87)
+        self.Z1SubtotalLabel.configure(font=("forte", 10)) 
         
-        self.Z2SubtotalLabel = tk.Label(self.SubtotalFrame)
+        self.Z2SubtotalLabel = Label(self.SubtotalFrame)
         self.Z2SubtotalLabel.place(relx=0.081, rely=0.268, height=22, width=87)
-        self.Z2SubtotalLabel.configure(activebackground="#f9f9f9")
-        self.Z2SubtotalLabel.configure(anchor='w')
-        self.Z2SubtotalLabel.configure(background="#d9d9d9")
-        self.Z2SubtotalLabel.configure(compound='left')
-        self.Z2SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z2SubtotalLabel.configure(foreground="#000000")
-        self.Z2SubtotalLabel.configure(highlightbackground="#d9d9d9")
-        self.Z2SubtotalLabel.configure(highlightcolor="black")
         self.Z2SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z2SubtotalLabel.configure(font=("forte", 10)) 
         
-        self.Z3SubtotalLabel = tk.Label(self.SubtotalFrame)
+        self.Z3SubtotalLabel = Label(self.SubtotalFrame)
         self.Z3SubtotalLabel.place(relx=0.081, rely=0.425, height=22, width=87)
-        self.Z3SubtotalLabel.configure(activebackground="#f9f9f9")
-        self.Z3SubtotalLabel.configure(anchor='w')
-        self.Z3SubtotalLabel.configure(background="#d9d9d9")
-        self.Z3SubtotalLabel.configure(compound='left')
-        self.Z3SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z3SubtotalLabel.configure(foreground="#000000")
-        self.Z3SubtotalLabel.configure(highlightbackground="#d9d9d9")
-        self.Z3SubtotalLabel.configure(highlightcolor="black")
         self.Z3SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z3SubtotalLabel.configure(font=("forte", 10)) 
         
-        self.Z5SubtotalLabel = tk.Label(self.SubtotalFrame)
-        self.Z5SubtotalLabel.place(relx=0.081, rely=0.582, height=22, width=87)
-        self.Z5SubtotalLabel.configure(activebackground="#f9f9f9")
-        self.Z5SubtotalLabel.configure(anchor='w')
-        self.Z5SubtotalLabel.configure(background="#d9d9d9")
-        self.Z5SubtotalLabel.configure(compound='left')
-        self.Z5SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z5SubtotalLabel.configure(foreground="#000000")
-        self.Z5SubtotalLabel.configure(highlightbackground="#d9d9d9")
-        self.Z5SubtotalLabel.configure(highlightcolor="black")
+        self.Z5SubtotalLabel = Label(self.SubtotalFrame)
         self.Z5SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z5SubtotalLabel.place(relx=0.081, rely=0.574, height=22, width=87)
+        self.Z5SubtotalLabel.configure(font=("forte", 10)) 
         
-        self.Z10SubtotalLabel = tk.Label(self.SubtotalFrame)
+        self.Z10SubtotalLabel = Label(self.SubtotalFrame)
         self.Z10SubtotalLabel.place(relx=0.081, rely=0.74, height=22, width=87)
-        self.Z10SubtotalLabel.configure(activebackground="#f9f9f9")
-        self.Z10SubtotalLabel.configure(anchor='w')
-        self.Z10SubtotalLabel.configure(background="#d9d9d9")
-        self.Z10SubtotalLabel.configure(compound='left')
-        self.Z10SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z10SubtotalLabel.configure(foreground="#000000")
-        self.Z10SubtotalLabel.configure(highlightbackground="#d9d9d9")
-        self.Z10SubtotalLabel.configure(highlightcolor="black")
         self.Z10SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z10SubtotalLabel.configure(font=("forte", 10)) 
         
-        self.Z15SubtotalLabel = tk.Label(self.SubtotalFrame)
+        self.Z15SubtotalLabel = Label(self.SubtotalFrame)
         self.Z15SubtotalLabel.place(relx=0.081, rely=0.898, height=22, width=87)
-        self.Z15SubtotalLabel.configure(activebackground="#f9f9f9")
-        self.Z15SubtotalLabel.configure(anchor='w')
-        self.Z15SubtotalLabel.configure(background="#d9d9d9")
-        self.Z15SubtotalLabel.configure(compound='left')
-        self.Z15SubtotalLabel.configure(disabledforeground="#a3a3a3")
-        self.Z15SubtotalLabel.configure(foreground="#000000")
-        self.Z15SubtotalLabel.configure(highlightbackground="#d9d9d9")
-        self.Z15SubtotalLabel.configure(highlightcolor="black")
         self.Z15SubtotalLabel.configure(text='''Sub-total: 0''')
+        self.Z15SubtotalLabel.configure(font=("forte", 10))
         
         self.Z1nButton = tk.Button(self.SubtotalFrame)
         self.Z1nButton.place(relx=0.797, rely=0.079, height=24, width=17)
-        self.Z1nButton.configure(activebackground="beige")
+        self.Z1nButton.configure(activebackground="black")
         self.Z1nButton.configure(activeforeground="black")
-        self.Z1nButton.configure(background="#d9d9d9")
+        self.Z1nButton.configure(background="black")
         self.Z1nButton.configure(command=self.Za2ateet1n)
         self.Z1nButton.configure(compound='left')
-        self.Z1nButton.configure(disabledforeground="#a3a3a3")
-        self.Z1nButton.configure(foreground="#000000")
-        self.Z1nButton.configure(highlightbackground="#d9d9d9")
+        self.Z1nButton.configure(disabledforeground="#89CFF0")
+        self.Z1nButton.configure(foreground="#89CFF0")
+        self.Z1nButton.configure(bd=0)
+        self.Z1nButton.configure(font=("Arial",40))
+        self.Z1nButton.configure(highlightbackground="#89CFF0")
         self.Z1nButton.configure(highlightcolor="black")
         self.Z1nButton.configure(pady="0")
         self.Z1nButton.configure(text='''-''')
         
         self.Z2nButton = tk.Button(self.SubtotalFrame)
         self.Z2nButton.place(relx=0.797, rely=0.237, height=24, width=17)
-        self.Z2nButton.configure(activebackground="beige")
+        self.Z2nButton.configure(activebackground="black")
         self.Z2nButton.configure(activeforeground="black")
-        self.Z2nButton.configure(background="#d9d9d9")
+        self.Z2nButton.configure(background="black")
         self.Z2nButton.configure(command=self.Za2ateet2n)
         self.Z2nButton.configure(compound='left')
-        self.Z2nButton.configure(disabledforeground="#a3a3a3")
-        self.Z2nButton.configure(foreground="#000000")
-        self.Z2nButton.configure(highlightbackground="#d9d9d9")
+        self.Z2nButton.configure(bd=0)
+        self.Z2nButton.configure(font=("Arial",40))
+        self.Z2nButton.configure(disabledforeground="#89CFF0")
+        self.Z2nButton.configure(foreground="#89CFF0")
+        self.Z2nButton.configure(highlightbackground="#89CFF0")
         self.Z2nButton.configure(highlightcolor="black")
         self.Z2nButton.configure(pady="0")
         self.Z2nButton.configure(text='''-''')
         
         self.Z3nButton = tk.Button(self.SubtotalFrame)
         self.Z3nButton.place(relx=0.797, rely=0.394, height=24, width=17)
-        self.Z3nButton.configure(activebackground="beige")
+        self.Z3nButton.configure(activebackground="black")
         self.Z3nButton.configure(activeforeground="black")
-        self.Z3nButton.configure(background="#d9d9d9")
+        self.Z3nButton.configure(background="black")
         self.Z3nButton.configure(command=self.Za2ateet3n)
         self.Z3nButton.configure(compound='left')
-        self.Z3nButton.configure(disabledforeground="#a3a3a3")
-        self.Z3nButton.configure(foreground="#000000")
-        self.Z3nButton.configure(highlightbackground="#d9d9d9")
+        self.Z3nButton.configure(bd=0)
+        self.Z3nButton.configure(font=("Arial",40))
+        self.Z3nButton.configure(disabledforeground="#89CFF0")
+        self.Z3nButton.configure(foreground="#89CFF0")
+        self.Z3nButton.configure(highlightbackground="#89CFF0")
         self.Z3nButton.configure(highlightcolor="black")
         self.Z3nButton.configure(pady="0")
         self.Z3nButton.configure(text='''-''')
         
         self.Z5nButton = tk.Button(self.SubtotalFrame)
         self.Z5nButton.place(relx=0.797, rely=0.551, height=24, width=17)
-        self.Z5nButton.configure(activebackground="beige")
+        self.Z5nButton.configure(activebackground="black")
         self.Z5nButton.configure(activeforeground="black")
-        self.Z5nButton.configure(background="#d9d9d9")
+        self.Z5nButton.configure(background="black")
         self.Z5nButton.configure(command=self.Za2ateet5n)
         self.Z5nButton.configure(compound='left')
-        self.Z5nButton.configure(disabledforeground="#a3a3a3")
-        self.Z5nButton.configure(foreground="#000000")
-        self.Z5nButton.configure(highlightbackground="#d9d9d9")
+        self.Z5nButton.configure(bd=0)
+        self.Z5nButton.configure(font=("Arial",40))
+        self.Z5nButton.configure(disabledforeground="#89CFF0")
+        self.Z5nButton.configure(foreground="#89CFF0")
+        self.Z5nButton.configure(highlightbackground="#89CFF0")
         self.Z5nButton.configure(highlightcolor="black")
         self.Z5nButton.configure(pady="0")
         self.Z5nButton.configure(text='''-''')
         
         self.Z10nButton = tk.Button(self.SubtotalFrame)
         self.Z10nButton.place(relx=0.797, rely=0.71, height=24, width=17)
-        self.Z10nButton.configure(activebackground="beige")
+        self.Z10nButton.configure(activebackground="black")
         self.Z10nButton.configure(activeforeground="black")
-        self.Z10nButton.configure(background="#d9d9d9")
+        self.Z10nButton.configure(background="black")
         self.Z10nButton.configure(command=self.Za2ateet10n)
         self.Z10nButton.configure(compound='left')
-        self.Z10nButton.configure(disabledforeground="#a3a3a3")
-        self.Z10nButton.configure(foreground="#000000")
-        self.Z10nButton.configure(highlightbackground="#d9d9d9")
+        self.Z10nButton.configure(bd=0)
+        self.Z10nButton.configure(font=("Arial",40))
+        self.Z10nButton.configure(disabledforeground="#89CFF0")
+        self.Z10nButton.configure(foreground="#89CFF0")
+        self.Z10nButton.configure(highlightbackground="#89CFF0")
         self.Z10nButton.configure(highlightcolor="black")
         self.Z10nButton.configure(pady="0")
         self.Z10nButton.configure(text='''-''')
         
         self.Z15nButton = tk.Button(self.SubtotalFrame)
         self.Z15nButton.place(relx=0.797, rely=0.865, height=24, width=17)
-        self.Z15nButton.configure(activebackground="beige")
+        self.Z15nButton.configure(activebackground="black")
         self.Z15nButton.configure(activeforeground="black")
-        self.Z15nButton.configure(background="#d9d9d9")
+        self.Z15nButton.configure(background="black")
         self.Z15nButton.configure(command=self.Za2ateet15n)
         self.Z15nButton.configure(compound='left')
-        self.Z15nButton.configure(disabledforeground="#a3a3a3")
-        self.Z15nButton.configure(foreground="#000000")
-        self.Z15nButton.configure(highlightbackground="#d9d9d9")
+        self.Z15nButton.configure(bd=0)
+        self.Z15nButton.configure(font=("Arial",40))
+        self.Z15nButton.configure(disabledforeground="#89CFF0")
+        self.Z15nButton.configure(foreground="#89CFF0")
+        self.Z15nButton.configure(highlightbackground="#89CFF0")
         self.Z15nButton.configure(highlightcolor="black")
         self.Z15nButton.configure(pady="0")
         self.Z15nButton.configure(text='''-''')
-        
-        self.TotalLabel = tk.Label(self.CartFrame)
-        self.TotalLabel.place(relx=0.072, rely=0.914, height=22, width=111)
-        self.TotalLabel.configure(activebackground="#f9f9f9")
-        self.TotalLabel.configure(anchor='w')
-        self.TotalLabel.configure(background="#d9d9d9")
-        self.TotalLabel.configure(compound='left')
-        self.TotalLabel.configure(disabledforeground="#a3a3a3")
-        self.TotalLabel.configure(foreground="#000000")
-        self.TotalLabel.configure(highlightbackground="#d9d9d9")
-        self.TotalLabel.configure(highlightcolor="black")
-        self.TotalLabel.configure(text='''Total: 0''')
-        
-        self.PayButton = tk.Button(self.CartFrame)
-        self.PayButton.place(relx=0.072, rely=0.953, height=24, width=47)
-        self.PayButton.configure(activebackground="beige")
-        self.PayButton.configure(activeforeground="black")
-        self.PayButton.configure(background="#d9d9d9")
-        self.PayButton.configure(command=self.Pay)
-        self.PayButton.configure(compound='left')
-        self.PayButton.configure(disabledforeground="#a3a3a3")
-        self.PayButton.configure(foreground="#000000")
-        self.PayButton.configure(highlightbackground="#d9d9d9")
-        self.PayButton.configure(highlightcolor="black")
-        self.PayButton.configure(pady="0")
-        self.PayButton.configure(text='''Pay''')
-        
-        self.ResetButton = tk.Button(self.CartFrame)
-        self.ResetButton.place(relx=0.497, rely=0.953, height=24, width=47)
-        self.ResetButton.configure(activebackground="beige")
-        self.ResetButton.configure(activeforeground="black")
-        self.ResetButton.configure(background="#d9d9d9")
+
+        self.ResetButton = HoverButton(self.CartFrame,overrelief='groove')
+        self.ResetButton.place(relx=0.054, rely=0.905, height=65, width=145)
         self.ResetButton.configure(command=self.Reset)
-        self.ResetButton.configure(compound='left')
-        self.ResetButton.configure(disabledforeground="#a3a3a3")
-        self.ResetButton.configure(foreground="#000000")
-        self.ResetButton.configure(highlightbackground="#d9d9d9")
-        self.ResetButton.configure(highlightcolor="black")
-        self.ResetButton.configure(pady="0")
         self.ResetButton.configure(text='''Reset''')
         
-        self.CartLabel = tk.Label(self.CartFrame)
+        self.CartLabel = Label(self.CartFrame)
         self.CartLabel.place(relx=0.383, rely=0.013, height=23, width=40)
-        self.CartLabel.configure(activebackground="#f9f9f9")
-        self.CartLabel.configure(anchor='w')
-        self.CartLabel.configure(background="#d9d9d9")
-        self.CartLabel.configure(compound='left')
-        self.CartLabel.configure(disabledforeground="#a3a3a3")
-        self.CartLabel.configure(foreground="#000000")
-        self.CartLabel.configure(highlightbackground="#d9d9d9")
-        self.CartLabel.configure(highlightcolor="black")
         self.CartLabel.configure(text='''Cart''')
         
         self.CustomerFrame = tk.Frame(self.top)
@@ -506,7 +332,7 @@ class Toplevel1:
         self.CustomerFrame.configure(relief='groove')
         self.CustomerFrame.configure(borderwidth="2")
         self.CustomerFrame.configure(relief="groove")
-        self.CustomerFrame.configure(background="#d9d9d9")
+        self.CustomerFrame.configure(background="black")
         self.CustomerFrame.configure(highlightbackground="#d9d9d9")
         self.CustomerFrame.configure(highlightcolor="black")
         
@@ -515,104 +341,48 @@ class Toplevel1:
         self.CustomerDetailsFrame.configure(relief='groove')
         self.CustomerDetailsFrame.configure(borderwidth="2")
         self.CustomerDetailsFrame.configure(relief="groove")
-        self.CustomerDetailsFrame.configure(background="#d9d9d9")
+        self.CustomerDetailsFrame.configure(background="black")
         self.CustomerDetailsFrame.configure(highlightbackground="#d9d9d9")
         self.CustomerDetailsFrame.configure(highlightcolor="black")
         
-        self.NameLabel = tk.Label(self.CustomerDetailsFrame)
+        self.NameLabel = Label(self.CustomerDetailsFrame)
         self.NameLabel.place(relx=0.072, rely=0.062, height=45, width=52)
-        self.NameLabel.configure(activebackground="#f9f9f9")
-        self.NameLabel.configure(anchor='w')
-        self.NameLabel.configure(background="#d9d9d9")
-        self.NameLabel.configure(compound='left')
-        self.NameLabel.configure(disabledforeground="#a3a3a3")
-        self.NameLabel.configure(foreground="#000000")
-        self.NameLabel.configure(highlightbackground="#d9d9d9")
-        self.NameLabel.configure(highlightcolor="black")
         self.NameLabel.configure(text='''Name:''')
+        self.NameLabel.configure(font=("forte", 10)) 
         
-        self.HouseLabel = tk.Label(self.CustomerDetailsFrame)
+        self.HouseLabel = Label(self.CustomerDetailsFrame)
         self.HouseLabel.place(relx=0.067, rely=0.194, height=33, width=52)
-        self.HouseLabel.configure(activebackground="#f9f9f9")
-        self.HouseLabel.configure(anchor='w')
-        self.HouseLabel.configure(background="#d9d9d9")
-        self.HouseLabel.configure(compound='left')
-        self.HouseLabel.configure(disabledforeground="#a3a3a3")
-        self.HouseLabel.configure(foreground="#000000")
-        self.HouseLabel.configure(highlightbackground="#d9d9d9")
-        self.HouseLabel.configure(highlightcolor="black")
+        self.HouseLabel.configure(font=("forte", 10)) 
         self.HouseLabel.configure(text='''House:''')
         
-        self.MPLabel = tk.Label(self.CustomerDetailsFrame)
+        self.MPLabel = Label(self.CustomerDetailsFrame)
         self.MPLabel.place(relx=0.017, rely=0.295, height=34, width=75)
-        self.MPLabel.configure(activebackground="#f9f9f9")
-        self.MPLabel.configure(anchor='w')
-        self.MPLabel.configure(background="#d9d9d9")
-        self.MPLabel.configure(compound='left')
-        self.MPLabel.configure(disabledforeground="#a3a3a3")
-        self.MPLabel.configure(foreground="#000000")
-        self.MPLabel.configure(highlightbackground="#d9d9d9")
-        self.MPLabel.configure(highlightcolor="black")
+        self.MPLabel.configure(font=("forte", 10)) 
         self.MPLabel.configure(text='''M-Points:''')
         
-        self.NumberLabel = tk.Label(self.CustomerDetailsFrame)
+        self.NumberLabel = Label(self.CustomerDetailsFrame)
         self.NumberLabel.place(relx=0.033, rely=0.395, height=34, width=64)
-        self.NumberLabel.configure(activebackground="#f9f9f9")
-        self.NumberLabel.configure(anchor='w')
-        self.NumberLabel.configure(background="#d9d9d9")
-        self.NumberLabel.configure(compound='left')
-        self.NumberLabel.configure(disabledforeground="#a3a3a3")
-        self.NumberLabel.configure(foreground="#000000")
-        self.NumberLabel.configure(highlightbackground="#d9d9d9")
-        self.NumberLabel.configure(highlightcolor="black")
+        self.NumberLabel.configure(font=("forte", 10)) 
         self.NumberLabel.configure(text='''Number:''')
         
-        self.LimitLabel = tk.Label(self.CustomerDetailsFrame)
+        self.LimitLabel = Label(self.CustomerDetailsFrame)
         self.LimitLabel.place(relx=0.042, rely=0.496, height=35, width=64)
-        self.LimitLabel.configure(activebackground="#f9f9f9")
-        self.LimitLabel.configure(anchor='w')
-        self.LimitLabel.configure(background="#d9d9d9")
-        self.LimitLabel.configure(compound='left')
-        self.LimitLabel.configure(disabledforeground="#a3a3a3")
-        self.LimitLabel.configure(foreground="#000000")
-        self.LimitLabel.configure(highlightbackground="#d9d9d9")
-        self.LimitLabel.configure(highlightcolor="black")
+        self.LimitLabel.configure(font=("forte", 10)) 
         self.LimitLabel.configure(text='''N-Limit:''')
         
-        self.BalanceLabel = tk.Label(self.CustomerDetailsFrame)
+        self.BalanceLabel = Label(self.CustomerDetailsFrame)
         self.BalanceLabel.place(relx=0.042, rely=0.636, height=22, width=64)
-        self.BalanceLabel.configure(activebackground="#f9f9f9")
-        self.BalanceLabel.configure(anchor='w')
-        self.BalanceLabel.configure(background="#d9d9d9")
-        self.BalanceLabel.configure(compound='left')
-        self.BalanceLabel.configure(disabledforeground="#a3a3a3")
-        self.BalanceLabel.configure(foreground="#000000")
-        self.BalanceLabel.configure(highlightbackground="#d9d9d9")
-        self.BalanceLabel.configure(highlightcolor="black")
+        self.BalanceLabel.configure(font=("forte", 10)) 
         self.BalanceLabel.configure(text='''Balance:''')
 
-        self.DOBLabel = tk.Label(self.CustomerDetailsFrame)
+        self.DOBLabel = Label(self.CustomerDetailsFrame)
         self.DOBLabel.place(relx=0.078, rely=0.744, height=22, width=52)
-        self.DOBLabel.configure(activebackground="#f9f9f9")
-        self.DOBLabel.configure(anchor='w')
-        self.DOBLabel.configure(background="#d9d9d9")
-        self.DOBLabel.configure(compound='left')
-        self.DOBLabel.configure(disabledforeground="#a3a3a3")
-        self.DOBLabel.configure(foreground="#000000")
-        self.DOBLabel.configure(highlightbackground="#d9d9d9")
-        self.DOBLabel.configure(highlightcolor="black")
+        self.DOBLabel.configure(font=("forte", 10)) 
         self.DOBLabel.configure(text='''D.O.B:''')
 
-        self.CardLabel = tk.Label(self.CustomerDetailsFrame)
+        self.CardLabel = Label(self.CustomerDetailsFrame)
         self.CardLabel.place(relx=0.094, rely=0.853, height=22, width=40)
-        self.CardLabel.configure(activebackground="#f9f9f9")
-        self.CardLabel.configure(anchor='w')
-        self.CardLabel.configure(background="#d9d9d9")
-        self.CardLabel.configure(compound='left')
-        self.CardLabel.configure(disabledforeground="#a3a3a3")
-        self.CardLabel.configure(foreground="#000000")
-        self.CardLabel.configure(highlightbackground="#d9d9d9")
-        self.CardLabel.configure(highlightcolor="black")
+        self.CardLabel.configure(font=("forte", 10)) 
         self.CardLabel.configure(text='''Card:''')
 
 
@@ -698,6 +468,14 @@ class Toplevel1:
         self.DOBEntry = DateEntry(self.CustomerDetailsFrame, textvariable=self.DOBEntryText, date_pattern="dd-mm-yyyy")
         self.DOBEntry.place(relx=0.214, rely=0.74, height=20, relwidth=0.622)
         self.DOBEntry.configure(state="disabled")
+        self.DOBEntry.configure(background="black")
+        self.DOBEntry.configure(foreground="gold")
+        self.BalanceEntry.configure(selectbackground="pink")
+        self.BalanceEntry.configure(selectforeground="blue")
+        self.BalanceEntry.configure(highlightbackground="yellow")
+        self.BalanceEntry.configure(highlightcolor="green")
+        self.BalanceEntry.configure(insertbackground="black")
+        self.BalanceEntry.configure(font="Arial")
         
         self.CardEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.CardEntryText)
         self.CardEntry.place(relx=0.214, rely=0.849, height=20, relwidth=0.622)
@@ -713,109 +491,48 @@ class Toplevel1:
         self.CardEntry.configure(state="readonly")
         #entries finished
         
-        self.CDLabel = tk.Label(self.CustomerFrame)
-        self.CDLabel.place(relx=0.306, rely=0.013, height=23, width=135)
-        self.CDLabel.configure(activebackground="#f9f9f9")
-        self.CDLabel.configure(anchor='w')
-        self.CDLabel.configure(background="#d9d9d9")
-        self.CDLabel.configure(compound='left')
-        self.CDLabel.configure(disabledforeground="#a3a3a3")
-        self.CDLabel.configure(foreground="#000000")
-        self.CDLabel.configure(highlightbackground="#d9d9d9")
-        self.CDLabel.configure(highlightcolor="black")
+        self.CDLabel = Label(self.CustomerFrame)
+        self.CDLabel.place(relx=0.30, rely=0.013, height=23, width=155)
         self.CDLabel.configure(text='''Customer Details''')
         
-        self.EditButton = tk.Button(self.CustomerFrame)
-        self.EditButton.place(relx=0.348, rely=0.384, height=44, width=97)
-        self.EditButton.configure(activebackground="beige")
-        self.EditButton.configure(activeforeground="black")
-        self.EditButton.configure(background="#d9d9d9")
+        self.EditButton = HoverButton(self.CustomerFrame)
+        self.EditButton.place(relx=0.378, rely=0.384, height=44, width=100)
         self.EditButton.configure(command=self.Edit_Customer)
-        self.EditButton.configure(compound='left')
-        self.EditButton.configure(disabledforeground="#a3a3a3")
-        self.EditButton.configure(foreground="#000000")
-        self.EditButton.configure(highlightbackground="#d9d9d9")
-        self.EditButton.configure(highlightcolor="black")
-        self.EditButton.configure(pady="0")
+        self.EditButton.configure(font=("forte", 11))
         self.EditButton.configure(text='''Edit Customer''')
         
-        self.AddButton = tk.Button(self.CustomerFrame)
-        self.AddButton.place(relx=0.031, rely=0.384, height=44, width=97)
-        self.AddButton.configure(activebackground="beige")
-        self.AddButton.configure(activeforeground="black")
-        self.AddButton.configure(background="#d9d9d9")
+        self.AddButton = HoverButton(self.CustomerFrame)
+        self.AddButton.place(relx=0.051, rely=0.384, height=44, width=100)
         self.AddButton.configure(command=self.Add_Customer)
-        self.AddButton.configure(compound='left')
-        self.AddButton.configure(disabledforeground="#a3a3a3")
-        self.AddButton.configure(foreground="#000000")
-        self.AddButton.configure(highlightbackground="#d9d9d9")
-        self.AddButton.configure(highlightcolor="black")
-        self.AddButton.configure(pady="0")
+        self.AddButton.configure(font=("forte", 11))
         self.AddButton.configure(text='''Add Customer''')
         
-        self.DeleteButton = tk.Button(self.CustomerFrame)
-        self.DeleteButton.place(relx=0.665, rely=0.384, height=44, width=97)
-        self.DeleteButton.configure(activebackground="beige")
-        self.DeleteButton.configure(activeforeground="black")
-        self.DeleteButton.configure(background="#d9d9d9")
+        self.DeleteButton = HoverButton(self.CustomerFrame)
+        self.DeleteButton.place(relx=0.695, rely=0.384, height=44, width=100)
         self.DeleteButton.configure(command=self.Delete_Customer)
-        self.DeleteButton.configure(compound='left')
-        self.DeleteButton.configure(disabledforeground="#a3a3a3")
-        self.DeleteButton.configure(foreground="#000000")
-        self.DeleteButton.configure(highlightbackground="#d9d9d9")
-        self.DeleteButton.configure(highlightcolor="black")
-        self.DeleteButton.configure(pady="0")
+        self.DeleteButton.configure(font=("forte", 10))
         self.DeleteButton.configure(text='''Delete Customer''')
         
-        self.TopUPButton = tk.Button(self.CustomerFrame)
-        self.TopUPButton.place(relx=0.665, rely=0.452, height=44, width=97)
-        self.TopUPButton.configure(activebackground="beige")
-        self.TopUPButton.configure(activeforeground="black")
-        self.TopUPButton.configure(background="#d9d9d9")
+        self.TopUPButton = HoverButton(self.CustomerFrame)
+        self.TopUPButton.place(relx=0.695, rely=0.453, height=44, width=100)
         self.TopUPButton.configure(command=self.TopUP)
-        self.TopUPButton.configure(compound='left')
-        self.TopUPButton.configure(disabledforeground="#a3a3a3")
-        self.TopUPButton.configure(foreground="#000000")
-        self.TopUPButton.configure(highlightbackground="#d9d9d9")
-        self.TopUPButton.configure(highlightcolor="black")
-        self.TopUPButton.configure(pady="0")
+        self.TopUPButton.configure(font=("forte", 12))
         self.TopUPButton.configure(text='''Top-up''')
         
-        self.AddCardButton = tk.Button(self.CustomerFrame)
-        self.AddCardButton.place(relx=0.031, rely=0.453, height=44, width=97)
-        self.AddCardButton.configure(activebackground="beige")
-        self.AddCardButton.configure(activeforeground="black")
-        self.AddCardButton.configure(background="#d9d9d9")
+        self.AddCardButton = HoverButton(self.CustomerFrame)
+        self.AddCardButton.place(relx=0.051, rely=0.453, height=44, width=100)
         self.AddCardButton.configure(command=self.Add_Card)
-        self.AddCardButton.configure(compound='left')
-        self.AddCardButton.configure(disabledforeground="#a3a3a3")
-        self.AddCardButton.configure(foreground="#000000")
-        self.AddCardButton.configure(highlightbackground="#d9d9d9")
-        self.AddCardButton.configure(highlightcolor="black")
-        self.AddCardButton.configure(pady="0")
+        self.AddCardButton.configure(font=("forte", 12))
         self.AddCardButton.configure(text='''Add Card''')
         
-        self.RemoveCardButton = tk.Button(self.CustomerFrame)
-        self.RemoveCardButton.place(relx=0.348, rely=0.453, height=44, width=97)
-        self.RemoveCardButton.configure(activebackground="beige")
-        self.RemoveCardButton.configure(activeforeground="black")
-        self.RemoveCardButton.configure(background="#d9d9d9")
+        self.RemoveCardButton = HoverButton(self.CustomerFrame)
+        self.RemoveCardButton.place(relx=0.378, rely=0.453, height=44, width=100)
         self.RemoveCardButton.configure(command=self.Remove_Card)
-        self.RemoveCardButton.configure(compound='left')
-        self.RemoveCardButton.configure(disabledforeground="#a3a3a3")
-        self.RemoveCardButton.configure(foreground="#000000")
-        self.RemoveCardButton.configure(highlightbackground="#d9d9d9")
-        self.RemoveCardButton.configure(highlightcolor="black")
-        self.RemoveCardButton.configure(pady="0")
+        self.RemoveCardButton.configure(font=("forte", 12))
         self.RemoveCardButton.configure(text='''Remove Card''')
         
-        self.CustomerListLabel = tk.Label(self.CustomerFrame)
-        self.CustomerListLabel.place(relx=0.369, rely=0.53, height=22, width=99)
-        self.CustomerListLabel.configure(anchor='w')
-        self.CustomerListLabel.configure(background="#d9d9d9")
-        self.CustomerListLabel.configure(compound='left')
-        self.CustomerListLabel.configure(disabledforeground="#a3a3a3")
-        self.CustomerListLabel.configure(foreground="#000000")
+        self.CustomerListLabel = Label(self.CustomerFrame)
+        self.CustomerListLabel.place(relx=0.350, rely=0.53, height=22, width=120)
         self.CustomerListLabel.configure(text='''Customer List''')
         
         self.CustomerList = ScrolledTable(self.CustomerFrame, self)
@@ -823,99 +540,183 @@ class Toplevel1:
         self.CustomerList.configure(relief='groove')
         self.CustomerList.configure(borderwidth="2")
         self.CustomerList.configure(relief="groove")
-
-        '''
-        ##CustomerList test
-        for i in range(50):
-            self.labell = ttk.Label(self.CustomerList.frame, text=f"Label {i}")
-            self.labell.pack(padx=10, pady=5)
-        self.CustomerList.update_scrollregion()
-        '''
         
         self.StockOuterFrame = tk.Frame(self.top)
         self.StockOuterFrame.place(relx=0.597, rely=0.013, relheight=0.954, relwidth=0.208)
         self.StockOuterFrame.configure(relief='groove')
         self.StockOuterFrame.configure(borderwidth="2")
         self.StockOuterFrame.configure(relief="groove")
-        self.StockOuterFrame.configure(background="#d9d9d9")
+        self.StockOuterFrame.configure(background="black")
         
         self.StocksList = ScrolledFrame(self.StockOuterFrame)
         self.StocksList.place(relx=0.043, rely=0.053, relheight=0.932, relwidth=0.92)
         self.StocksList.configure(relief='groove')
         self.StocksList.configure(borderwidth="2")
         self.StocksList.configure(relief="groove")
-        self.StocksList.configure(background="#d9d9d9")
+        self.StocksList.configure(background="black")
    
-        self.StocksLabel = tk.Label(self.StockOuterFrame)
-        self.StocksLabel.place(relx=0.428, rely=0.013, height=23, width=40)
-        self.StocksLabel.configure(anchor='w')
-        self.StocksLabel.configure(background="#d9d9d9")
-        self.StocksLabel.configure(compound='left')
-        self.StocksLabel.configure(disabledforeground="#a3a3a3")
-        self.StocksLabel.configure(foreground="#000000")
-        self.StocksLabel.configure(text='''Stock''')
-        
-        '''
-        ##StocksList test
-        for i in range(50):
-            self.labell = ttk.Label(self.StocksList.frame, text=f"Label {i}")
-            self.labell.pack(padx=10, pady=5)
-            
+        self.StocksLabel = Label(self.StockOuterFrame)
+        self.StocksLabel.place(relx=0.388, rely=0.013, height=23, width=62)
+        self.StocksLabel.configure(text='''Menu''')
+
+        for stock in self.stocks:
+            self.values[stock] = tk.IntVar(value=0)  # Initialize values to 0
+            split = tk.Label(self.StocksList.frame, text="  ")
+            split.pack(padx=10, pady=3)
+            stock1 = ttk.Frame(self.StocksList.frame)
+            stock1.pack(padx=3, pady=8)
+            name_label = tk.Label(stock1, text=stock[0])
+            name_label.pack(padx=10, pady=3)            
+            add_button = tk.Button(stock1, text="+", width=3, command=lambda s=stock: self.increment(s))
+            add_button.pack(side="left")
+            amount_label = tk.Label(stock1, textvariable=self.values[stock], width=23)
+            amount_label.pack(side="left")
+            reduce_button = tk.Button(stock1, text="-", width=3, command=lambda s=stock: self.decrement(s))
+            reduce_button.pack(side="left")            
+            split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+            split.pack(padx=10, pady=3)       
         self.StocksList.update_scrollregion()
-        '''
+        
         self.LogFrame = tk.Frame(self.top)
         self.LogFrame.place(relx=0.81, rely=0.013, relheight=0.954, relwidth=0.182)
         self.LogFrame.configure(relief='groove')
         self.LogFrame.configure(borderwidth="2")
         self.LogFrame.configure(relief="groove")
-        self.LogFrame.configure(background="#d9d9d9")
+        self.LogFrame.configure(background="black")
         
         self.LogLabel = tk.Label(self.LogFrame)
-        self.LogLabel.place(relx=0.39, rely=0.013, height=23, width=88)
+        self.LogLabel.place(relx=0.42, rely=0.013, height=23, width=88)
         self.LogLabel.configure(anchor='w')
-        self.LogLabel.configure(background="#d9d9d9")
+        self.LogLabel.configure(background="black")
         self.LogLabel.configure(compound='left')
-        self.LogLabel.configure(disabledforeground="#a3a3a3")
-        self.LogLabel.configure(foreground="#000000")
+        self.LogLabel.configure(disabledforeground="black")
+        self.LogLabel.configure(foreground="Gold")
+        self.LogLabel.configure(font=("forte", 14))
         self.LogLabel.configure(text='''Log''')
         
-        self.LogList = Log(self.LogFrame, max_length=10)
-        self.LogList.place(relx=0.05, rely=0.053, relheight=0.935, relwidth=0.905)
+        self.LogList = Log(self.LogFrame, max_length=100)
+        self.LogList.place(relx=0.05, rely=0.053, relheight=0.400, relwidth=0.905)
         self.LogList.configure(relief='groove')
         self.LogList.configure(borderwidth="2")
         self.LogList.configure(relief="groove")
-        self.LogList.configure(background="#d9d9d9")
-
-        '''
-        ##LogList test
-        for i in range(50):
-            self.labell = ttk.Label(self.LogList.frame, text=f"Label {i}")
-            self.labell.pack(padx=10, pady=5)
-            
-        self.LogList.update_scrollregion()
-        '''
+        self.LogList.configure(background="black")
+        
+        self.orderLabel = tk.Label(self.LogFrame)
+        self.orderLabel.place(relx=0.39, rely=0.465, height=23, width=88)
+        self.orderLabel.configure(anchor='w')
+        self.orderLabel.configure(font=("forte", 14))
+        self.orderLabel.configure(background="black")
+        self.orderLabel.configure(compound='left')
+        self.orderLabel.configure(disabledforeground="black")
+        self.orderLabel.configure(foreground="Gold")
+        self.orderLabel.configure(text='''Order''')
+        
+        self.orderListHolder = ScrolledFrame(self.LogFrame)
+        self.orderListHolder.place(relx=0.05, rely=0.500, relheight=0.4, relwidth=0.905) 
+        self.orderList = tk.Label(self.orderListHolder, textvariable=self.Order)
+        
+        self.orderList = tk.Label(self.LogFrame, textvariable=self.Order)
+        self.orderList.place(relx=0.05, rely=0.500, relheight=0.4, relwidth=0.905)
+        self.orderList.configure(background="white")
+        self.orderList.configure(font="TkFixedFont")
+        self.orderList.configure(foreground="#000000")
+        self.orderList.configure(highlightbackground="#d9d9d9")
+        self.orderList.configure(highlightcolor="black")
+        self.orderList.configure(state="normal")
+        
+        self.PayButton = HoverButton(self.LogFrame)
+        self.PayButton.place(relx=0.15, rely=0.909, relheight=0.072, relwidth=0.700)
+        self.PayButton.configure(command=self.Pay)
+        self.PayButton.configure(text='''Pay''')
+        
         self.Reset()
+
+    def update_reciept(self):
+        self.Order.set("")
+        if self.user and self.Name:
+            self.reciept = "\n"
+            self.reciept += "\nCashier: " + self.user
+            self.reciept += "\nCustomer: " + self.Name
+            self.tot = 0
+            for stock_name, stock_value in self.values.items():
+                if int(stock_value.get()) > 0:   
+                    self.reciept += "\n" + str(stock_name[0]) + " x " + str(stock_name[1]) + "$ x " + str(stock_value.get()) 
+                    self.tot += int(stock_name[1]) * int(stock_value.get())
+            if self.B1 > 0:
+                self.reciept += "\n" + "Special 1 x 1$ x " + str(self.B1)
+            if self.B2 > 0:
+                self.reciept += "\n" + "Special 2 x 2$ x " + str(self.B2)
+            if self.B3 > 0:
+                self.reciept += "\n" + "Special 3 x 3$ x " + str(self.B3)
+            if self.B5 > 0:
+                self.reciept += "\n" + "Special 5 x 5$ x " + str(self.B5)
+            if self.B10 > 0:
+                self.reciept += "\n" + "Special 10 x 10$ x " + str(self.B10)
+            if self.B15 > 0:
+                self.reciept += "\n" + "Special 15 x 15$ x " + str(self.B15)
+            self.tot += self.total
+            self.reciept += "\nTotal: " + str(self.tot)
+            self.reciept += "\nBalance Before: " + str(self.Balance)
+            self.reciept += "\nBalance After: " + str(self.Balance - self.tot)
+            self.Order.set(self.reciept)
+            self.orderListHolder.update_scrollregion()
+            
+    def increment(self, stock):
+        if self.user and self.Name:
+            current_value = int(self.values[stock].get())
+            self.values[stock].set(str(current_value + 1))
+            self.update_reciept()                      
+               
+    def decrement(self, stock):
+        if self.user and self.Name:
+            current_value = int(self.values[stock].get())
+            if current_value > 0:
+                self.values[stock].set(str(current_value - 1))
+                self.update_reciept()    
         
     def Add_Card(self):
         if self.Card and self.user:
             try:
                 self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
                 self.Logger(f"Card: {self.Card} \nAdded to UID: {self.UID}") 
+                self.Logger(f"Done!", verbose = True) 
             except:
-                self.Logger(f"Unable to add Card!\n UID: {self.UID}") 
+                self.Logger(f"Unable to add Card!", verbose = True) 
 
     def Remove_Card(self):
         if self.Card and self.user:
             self.Card = ""
             try:  
                 self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
-                self.Logger("Card deleted successfully!")
+                self.Logger("Card deleted successfully!",verbose=True)
             except:
-                self.Logger("Card does not exist!") 
+                self.Logger("Card does not exist!",verbose=True) 
 
+    def add_Last_Stock(self):
+        self.stocks = self.db.getStocks()
+        stock = self.stocks[len(self.stocks)-1]
+        self.values[stock] = tk.IntVar(value=0)  # Initialize values to 0
+        split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+        split.pack(padx=10, pady=3)
+        stock1 = ttk.Frame(self.StocksList.frame)
+        stock1.pack(padx=3, pady=8)
+        name_label = tk.Label(stock1, text=stock[0])
+        name_label.pack(padx=10, pady=3)            
+        add_button = tk.Button(stock1, text="+", width=3, command=lambda s=stock: self.increment(s))
+        add_button.pack(side="left")
+        amount_label = tk.Label(stock1, textvariable=self.values[stock], width=23)
+        amount_label.pack(side="left")
+        reduce_button = tk.Button(stock1, text="-", width=3, command=lambda s=stock: self.decrement(s))
+        reduce_button.pack(side="left")            
+        split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+        split.pack(padx=10, pady=3)       
+        self.StocksList.update_scrollregion()
+        
     def BUY(self):
         if self.user:
-            StockEntryForm(self.user)
+            self.Reset()
+            a = StockEntryForm(self.user, self)
+            a.start()     
         
     def Add_Customer(self):
         if self.admin:
@@ -930,62 +731,70 @@ class Toplevel1:
                                 m_points=self.MPEntryText.get()
                                 )
                 self.CustomerList.update_treeview()
-                self.Logger(f"Customer added successfully, Name: {self.NameEntryText.get()}")
             except:
-                self.Logger("UNABLE TO ADD CUSTOMER!")
+                self.Logger("UNABLE TO ADD CUSTOMER!",verbose=True)
 
     def Delete_Customer(self):
-        if self.admin:
+        if self.admin and self.UID is not None:
+            try:
+                self.db.getCustomerID(self.UID)
+            except:
+                return
             try:
                 self.db.deleteCustomer(self.UID)
-                self.Logger(f"Customer deleted successfully\n ID: {self.UID}")
+                self.Logger(f"Customer deleted successfully\n ID: {self.UID}",verbose=True)
+                self.Reset()
             except:
-                print("Warning: No such customer!")
-                self.Logger(f"No such customer\n ID: {self.UID}")
+                self.Logger(f"No such customer\n ID: {self.UID}",verbose=True)
             self.CustomerList.update_treeview()
 
     def Edit_Customer(self):
         if self.admin:
-            try:
-                self.db.editCustomer(self.UID,
-                                    self.HouseEntryText.get(),
-                                    self.CardEntryText.get(),
-                                    self.NameEntryText.get(),
-                                    self.DOBEntryText.get(),
-                                    self.NumberEntryText.get(),
+            try: 
+                self.db.editCustomer(customer_id =self.UID,
+                                    house_id =self.HouseEntryText.get(),
+                                    card_id=self.CardEntryText.get(),
+                                    name=self.NameEntryText.get(),
+                                    dob=self.DOBEntryText.get(),
+                                    number=self.NumberEntryText.get(),
                                     credit_limit=self.NLimitEntryText.get(),
                                     balance=self.BalanceEntryText.get(),
                                     m_points=self.MPEntryText.get()
                                     )
                 self.CustomerList.update_treeview()
-                self.Logger(f"Customer updated successfully\n ID: {self.UID}")
             except:
-                self.Logger(f"Unable to ubdate customer\n ID: {self.UID}")
+                self.Logger(f"Unable to update customer\n ID: {self.UID}",verbose=True)
 
     def Pay(self):
         if self.UID and self.user:
-            if (self.Balance + self.limit) >= self.total: 
+            if (self.Balance + self.limit) >= self.tot: 
                 try:
-                    self.Balance -= self.total
+                    self.Balance -= self.tot
                     self.BalanceEntryText.set(f"{self.Balance}")
                     self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
-                    self.db.addSale(str(self.user), self.UID, self.total)
-                    self.Logger(f"Payment:\n User: {self.user}\n Amount: {self.total}\n Customer {self.UID}: {self.Name}\nSuccessful!")
+                    self.db.addSale(str(self.user), self.UID, self.tot, self.reciept)
+                    self.Logger(f"Payment:\n Amount: {self.tot}\n Customer {self.UID}: {self.Name}\n Successful!",verbose=True)
                     self.Reset()
                 except:
-                     self.Logger(f"Payment:\n User: {self.user}\n Amount: {self.total}\n Customer {self.UID}: {self.Name}\nUn-successful!")  
+                     self.Logger(f"Payment:\n Amount: {self.tot}\n Customer {self.UID}: {self.Name}\n Un-successful!",verbose=True)  
             else:
-                self.Logger("Not enough balance!")      
+                self.Logger("Not enough balance!",verbose=True)      
         elif self.UID and not self.user:
             self.Logger("Login required!")
+        elif not self.UID and not self.user:
+            self.Logger("Unothorized Access Trial!")
+            pass
         else:
-            self.Logger("Customer selection required!")
+            self.Logger("Customer selection required!",verbose=True)
 
     def TopUP(self):
         if self.admin:
             amount = simpledialog.askfloat("Top-Up", "Enter the top-up amount:")
-            if amount is None or amount <= 0:
-                amount = simpledialog.askfloat("Invalid Top-Up amount", "Enter a valid amount:")
+            if amount is None:
+                return
+            if amount <= 0:
+                self.Logger(f"Top-Up: Customer:  {self.UID}: {self.Name}\nAmount: {amount}\nUser: {self.user}\nFailed!")
+                return
             try:
                 self.db.topup(self.UID, amount)
                 self.CustomerList.update_treeview()
@@ -1021,16 +830,6 @@ class Toplevel1:
         self.Z10SubtotalLabel.configure(text= t)
         t = "Sub-total: "+str(self.sub15)
         self.Z15SubtotalLabel.configure(text= t)
-        
-        self.HouseEntryText.set("")
-        self.CardEntryText.set("")
-        self.NameEntryText.set("")
-        self.DOBEntryText.set("")
-        self.NumberEntryText.set("")
-        self.NLimitEntryText.set("")
-        self.BalanceEntryText.set("")
-        self.MPEntryText.set("")
-        
         self.UID = None
         self.Name = None
         self.House = None
@@ -1040,81 +839,40 @@ class Toplevel1:
         self.Balance = None
         self.DOB = None
         self.Card = None
+        self.HouseEntryText.set("")
+        self.CardEntryText.set("")
+        self.NameEntryText.set("")
+        self.DOBEntryText.set("")
+        self.NumberEntryText.set("")
+        self.NLimitEntryText.set("")
+        self.BalanceEntryText.set("")
+        self.MPEntryText.set("")
         
-        self.CustomerList.update_treeview()
+        self.top.configure(background="Black")
+        if self.user:
+            self.top.configure(background="Green")
+            self.CustomerList.update_treeview()
+            self.Order.set("")
+            for stock in self.stocks:
+                self.values[stock].set(0)
 
     def update_total(self):
         self.total = self.sub1 + self.sub2 + self.sub3 + self.sub5 + self.sub10 + self.sub15
-        t = "Total: " + str(self.total)
-        self.TotalLabel.configure(text= t)
+        self.update_reciept()
    
     def Za2ateet1(self):
-        self.B1 += 1
-        t = "X   "+str(self.B1)
-        self.Z1AmountLabel.configure(text=t)
-        self.sub1 = self.B1 * 1
-        t = "Sub-total: "+str(self.sub1)
-        self.Z1SubtotalLabel.configure(text= t)
-        self.update_total()
-
-    def Za2ateet2(self):
-        self.B2 += 1
-        t = "X   "+str(self.B2)
-        self.Z2AmountLabel.configure(text=t)
-        self.sub2 = self.B2 * 2
-        t = "Sub-total: "+str(self.sub2)
-        self.Z2SubtotalLabel.configure(text= t)
-        self.update_total()
-
-    def Za2ateet3(self):
-        self.B3 += 1
-        t = "X   "+str(self.B3)
-        self.Z3AmountLabel.configure(text=t)
-        self.sub3 = self.B3 * 3
-        t = "Sub-total: "+str(self.sub3)
-        self.Z3SubtotalLabel.configure(text= t)
-        self.update_total()
-            
-    def Za2ateet5(self):
-        self.B5 += 1
-        t = "X   "+str(self.B5)
-        self.Z5AmountLabel.configure(text=t)
-        self.sub5 = self.B5 * 5
-        t = "Sub-total: "+str(self.sub5)
-        self.Z5SubtotalLabel.configure(text= t)
-        self.update_total()
-
-    def Za2ateet10(self):
-        self.B10 += 1
-        t = "X   "+str(self.B10)
-        self.Z10AmountLabel.configure(text=t)
-        self.sub10 = self.B10 * 10
-        t = "Sub-total: "+str(self.sub10)
-        self.Z10SubtotalLabel.configure(text= t)
-        self.update_total()
-
-    def Za2ateet15(self):
-        self.B15 += 1
-        t = "X   "+str(self.B15)
-        self.Z15AmountLabel.configure(text=t)
-        self.sub15 = self.B15 * 15
-        t = "Sub-total: "+str(self.sub15)
-        self.Z15SubtotalLabel.configure(text= t)
-        self.update_total()
-
-    def Za2ateet1n(self):
-        if self.B1 > 0:
-            self.B1 -= 1
+        if self.user and self.Name:
+            self.B1 += 1
             t = "X   "+str(self.B1)
             self.Z1AmountLabel.configure(text=t)
             self.sub1 = self.B1 * 1
             t = "Sub-total: "+str(self.sub1)
             self.Z1SubtotalLabel.configure(text= t)
             self.update_total()
-
-    def Za2ateet2n(self):
-        if self.B2 > 0:
-            self.B2 -= 1
+        
+    def Za2ateet2(self):
+        if self.user and self.Name:
+            self.B2 += 1
             t = "X   "+str(self.B2)
             self.Z2AmountLabel.configure(text=t)
             self.sub2 = self.B2 * 2
@@ -1122,19 +880,19 @@ class Toplevel1:
             self.Z2SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet3n(self):
-        if self.B3 > 0:
-            self.B3 -= 1
+    def Za2ateet3(self):
+        if self.user and self.Name:
+            self.B3 += 1
             t = "X   "+str(self.B3)
             self.Z3AmountLabel.configure(text=t)
             self.sub3 = self.B3 * 3
             t = "Sub-total: "+str(self.sub3)
             self.Z3SubtotalLabel.configure(text= t)
             self.update_total()
-
-    def Za2ateet5n(self):
-        if self.B5 > 0:
-            self.B5 -= 1
+            
+    def Za2ateet5(self):
+        if self.user and self.Name:
+            self.B5 += 1
             t = "X   "+str(self.B5)
             self.Z5AmountLabel.configure(text=t)
             self.sub5 = self.B5 * 5
@@ -1142,9 +900,9 @@ class Toplevel1:
             self.Z5SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet10n(self):
-        if self.B10 > 0:
-            self.B10 -= 1
+    def Za2ateet10(self):
+        if self.user and self.Name:
+            self.B10 += 1
             t = "X   "+str(self.B10)
             self.Z10AmountLabel.configure(text=t)
             self.sub10 = self.B10 * 10
@@ -1152,9 +910,9 @@ class Toplevel1:
             self.Z10SubtotalLabel.configure(text= t)
             self.update_total()
 
-    def Za2ateet15n(self):
-        if self.B15 > 0:
-            self.B15 -= 1
+    def Za2ateet15(self):
+        if self.user and self.Name:
+            self.B15 += 1
             t = "X   "+str(self.B15)
             self.Z15AmountLabel.configure(text=t)
             self.sub15 = self.B15 * 15
@@ -1162,7 +920,74 @@ class Toplevel1:
             self.Z15SubtotalLabel.configure(text= t)
             self.update_total()
 
+    def Za2ateet1n(self):
+        if self.user and self.Name:
+            if self.B1 > 0:
+                self.B1 -= 1
+                t = "X   "+str(self.B1)
+                self.Z1AmountLabel.configure(text=t)
+                self.sub1 = self.B1 * 1
+                t = "Sub-total: "+str(self.sub1)
+                self.Z1SubtotalLabel.configure(text= t)
+                self.update_total()
+
+    def Za2ateet2n(self):
+        if self.user and self.Name:
+            if self.B2 > 0:
+                self.B2 -= 1
+                t = "X   "+str(self.B2)
+                self.Z2AmountLabel.configure(text=t)
+                self.sub2 = self.B2 * 2
+                t = "Sub-total: "+str(self.sub2)
+                self.Z2SubtotalLabel.configure(text= t)
+                self.update_total()
+
+    def Za2ateet3n(self):
+        if self.user and self.Name:
+            if self.B3 > 0:
+                self.B3 -= 1
+                t = "X   "+str(self.B3)
+                self.Z3AmountLabel.configure(text=t)
+                self.sub3 = self.B3 * 3
+                t = "Sub-total: "+str(self.sub3)
+                self.Z3SubtotalLabel.configure(text= t)
+                self.update_total()
+
+    def Za2ateet5n(self):
+        if self.user and self.Name:
+            if self.B5 > 0:
+                self.B5 -= 1
+                t = "X   "+str(self.B5)
+                self.Z5AmountLabel.configure(text=t)
+                self.sub5 = self.B5 * 5
+                t = "Sub-total: "+str(self.sub5)
+                self.Z5SubtotalLabel.configure(text= t)
+                self.update_total()
+
+    def Za2ateet10n(self):
+        if self.user and self.Name:
+            if self.B10 > 0:
+                self.B10 -= 1
+                t = "X   "+str(self.B10)
+                self.Z10AmountLabel.configure(text=t)
+                self.sub10 = self.B10 * 10
+                t = "Sub-total: "+str(self.sub10)
+                self.Z10SubtotalLabel.configure(text= t)
+                self.update_total()
+
+    def Za2ateet15n(self):
+        if self.user and self.Name:
+            if self.B15 > 0:
+                self.B15 -= 1
+                t = "X   "+str(self.B15)
+                self.Z15AmountLabel.configure(text=t)
+                self.sub15 = self.B15 * 15
+                t = "Sub-total: "+str(self.sub15)
+                self.Z15SubtotalLabel.configure(text= t)
+                self.update_total()
+
     def NFClogin(self, card, admin):
+        self.top.configure(background="Green")
         self.user = card
         if admin:
             self.admin = True
@@ -1174,13 +999,17 @@ class Toplevel1:
             self.MPEntry.configure(state="normal")
             self.HouseEntry.configure(state="normal")
             self.NameEntry.configure(state="normal")
-        self.Logger(f"user: {self.user} logged in\nadmin: {self.admin}")
+        self.Logger(f"user: {self.user} logged in!")
+        self.CustomerList.update_treeview()
             
     def NFClogout(self):
         self.Logger(f"user: {self.user} logged out!")
         self.user == None
         self.admin = False
-        
+        self.Reset()
+        self.CustomerList.clear_treeview()
+        self.top.configure(background="Black")
+               
     def NFCRegisterCard(self, card):
         self.CardEntryText.set(card) 
         self.Card = card
@@ -1190,6 +1019,7 @@ class Toplevel1:
         return self.db.getCustomerID(customer)
 
     def NFCcustomer(self, args):
+        self.top.configure(background="Yellow")
         self.UID = args[0]
         self.Name = args[3]
         self.House = args[1]
@@ -1211,15 +1041,25 @@ class Toplevel1:
         
         self.CustomerList.select_by_card_id(self.Card)        
 
-    def Logger(self, message):
-        #+ fix scrollable frame to to have newest on top and to scroll down when needed
-        #implement logger function to save logs to a db table
-        self.LogList.append(message)
+    def Logger(self, message, verbose=False): 
+        try:
+            with open('log.txt', 'a') as log_file:
+                log_file.write(str(datetime.now()) + " " + message + '\n')
+            if verbose:
+                self.LogList.append(message)
+        except Exception as e:
+            pass
+        
+    def on_exit(self):
+        self.nfc.stop()
+        root.destroy()
+        
+
     
 if __name__ == '__main__':
-    _debug = True
     root = tk.Tk()
-    root.protocol( 'WM_DELETE_WINDOW' , root.destroy)
     _top1 = root
     _w1 = Toplevel1(_top1)
+    root.protocol( 'WM_DELETE_WINDOW' , _w1.on_exit)    
     root.mainloop()
+
