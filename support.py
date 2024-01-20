@@ -529,8 +529,8 @@ class ScrolledTable(tk.Frame):
              
 class NFC():
     def __init__(self, ui):
-        self.server_ip = "192.168.1.105"  # Laptop's IP address
-        self.server_port = 20920  # Port used in NodeMCU code
+        self.server_ip = self.getIPAddress()  # Laptop's IP address
+        self.server_port = 2020  # Port used in NodeMCU code
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.server_ip, self.server_port))
         self.server_socket.listen()  # Listen for one connection
@@ -538,7 +538,7 @@ class NFC():
         self.ui = ui
         self.stop_event = threading.Event()
         
-        self.t = threading.Thread(target=self.start_server, args=(self.stop_event,))
+        self.t = threading.Thread(target=self.start_server)
         self.state = False
         
         self.known_nfc_data = self.db.getUsers()
@@ -549,7 +549,14 @@ class NFC():
         for i in range(len(self.customers)):
             self.customers[i] = self.customers[i][2] 
         self.start()
-
+        
+    def getIPAddress(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    
     def verify_nfc_card(self, data):
         self.known_nfc_data = self.db.getUsers()
         for i in range(len(self.known_nfc_data)):
