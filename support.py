@@ -11,7 +11,7 @@ global state
 state=False
 
 class MyDB:
-    def __init__(self, ui, db='testdb.db'):
+    def __init__(self, ui, db='db.db'):
         self.db = db
         self.ui = ui
         self.querie_db('''
@@ -24,7 +24,8 @@ class MyDB:
                 "Number"	TEXT NOT NULL,
                 "CreditLimit"	INTEGER NOT NULL DEFAULT 0,
                 "Balance"	INTEGER NOT NULL DEFAULT 0,
-                "MPoints"	INTEGER DEFAULT 0,
+                "Email"	TEXT NOT NULL,
+                "JoinDate" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY("ID" AUTOINCREMENT));''')
         
         self.querie_db('''
@@ -52,6 +53,7 @@ class MyDB:
                 "UserID"	INTEGER NOT NULL,
                 "Amount"	INTEGER NOT NULL,
                 "Description"	TEXT NOT NULL,
+                "Timestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY("ID" AUTOINCREMENT),
                 FOREIGN KEY("UserID") REFERENCES "Users"("ID"));''')
 
@@ -79,62 +81,41 @@ class MyDB:
         query = '''SELECT * FROM Customers'''
         return self.querie_db(query)
     
-    def addCustomer(self, house_id, card_id, name, dob, number, credit_limit=0, balance=0, m_points=0):
+    def addCustomer(self, house_id, card_id, name, dob, number, credit_limit, balance, email):
         query = f'''SELECT * FROM CUSTOMERS WHERE Name Like "{name}" AND DOB = "{dob}" OR Number = "{number}"'''
         if not self.querie_db(query):
             query = f'''
-                INSERT INTO Customers (HouseID, CardID, Name, DOB, Number, CreditLimit, Balance, MPoints)
-                VALUES ('{house_id}', '{card_id}', '{name}', '{dob}', '{number}', '{credit_limit}', '{balance}', '{m_points}');
+                INSERT INTO Customers (HouseID, CardID, Name, DOB, Number, CreditLimit, Balance, Email)
+                VALUES ('{house_id}', '{card_id}', '{name}', '{dob}', '{number}', '{credit_limit}', '{balance}', '{email}');
             '''
             if house_id and card_id and name and dob and number:
                 self.querie_db(query)
     
-    def editCustomer(self, customer_id, house_id=None, card_id=None, name=None, dob=None, number=None,
-                    credit_limit=None, balance=None, m_points=None):
-        # Define default values for each field
-        default_house_id = "Guest"
-        default_card_id = "None"
-        default_name = "No Name"
-        default_dob = "01-01-2001"
-        default_number = ""
-        default_credit_limit = 0
-        default_balance = 0
-        default_m_points = 0
-
-        # Check each input and set to default if it's a string or None
-        if house_id is None or not isinstance(house_id, str):
-            house_id = default_house_id
-        if card_id is None or not isinstance(card_id, str):
-            card_id = default_card_id
-        if name is None or not isinstance(name, str):
-            name = default_name
-        if dob is None or not isinstance(dob, str):
-            dob = default_dob
-        if number is None or not isinstance(number, str):
-            number = default_number
-        if credit_limit is None or not isinstance(credit_limit, (int, float)):
-            credit_limit = default_credit_limit
-        if balance is None or not isinstance(balance, (int, float)):
-            balance = default_balance
-        if m_points is None or not isinstance(m_points, int):
-            m_points = default_m_points
-
+    def editCustomer(self, customer_id, house_id, card_id, name, dob, number,
+                    credit_limit, balance, email):
         # Create a list to store the individual update statements
         update_statements = []
+        
+        # Check each input and append them to the update statement
+        if house_id is not None:
+            update_statements.append(f'HouseID = "{house_id}"')
+        if card_id is not None:
+            update_statements.append(f'CardID = "{card_id}"')
+        if name is not None:
+            update_statements.append(f'Name = "{name}"')
+        if dob is not None:
+            update_statements.append(f'DOB = "{dob}"')   
+        if number is not None:
+            update_statements.append(f'Number = "{number}"')  
+        if credit_limit is not None:
+            update_statements.append(f'CreditLimit = {credit_limit}') 
+        if balance is not None:
+            update_statements.append(f'Balance = {balance}')           
+        if email is not None:
+            update_statements.append(f'Email = "{email}"')
 
-        # Add the updates to the update_statements list
-        update_statements.append(f'HouseID = "{house_id}"')
-        update_statements.append(f'CardID = "{card_id}"')
-        update_statements.append(f'Name = "{name}"')
-        update_statements.append(f'DOB = "{dob}"')
-        update_statements.append(f'Number = "{number}"')
-        update_statements.append(f'CreditLimit = {credit_limit}')
-        update_statements.append(f'Balance = {balance}')
-        update_statements.append(f'MPoints = {m_points}')
-
-        # Start building the UPDATE query
-        query = f'''UPDATE Customers SET {', '.join(update_statements)} WHERE ID = {customer_id};'''
-
+        # Build the UPDATE query
+        query = f'''UPDATE Customers SET {', '.join(update_statements)} WHERE ID = {customer_id};'''  
         # Execute the query
         self.querie_db(query)
 
@@ -234,13 +215,7 @@ class MyDB:
 
     def addStock(self, item, amount):  
         if self.getStock(item) != []:
-            #self.editStock(item, int(self.getStock(item)[0][2]) + int(amount))
             self.editStock(item, int(amount))
-            self.ui.stocks = self.getStocks()
-            self.ui.values[item] = self.getStock(item)
-            self.ui.top.destroy()
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
         else:
             query = f'''
             INSERT INTO Menu (Item, Price)
@@ -248,7 +223,7 @@ class MyDB:
             '''
             self.querie_db(query)
             self.ui.add_Last_Stock()
-            self.ui.stocks = self.getStocks()
+            self.ui.stocks = self.getStocks()  
  
     def editStock(self, item, amount):
         query = f'''
@@ -307,7 +282,6 @@ class StockEntryForm:
         self.price_entry = tk.Entry(self.frame)
         self.price_entry.pack()
 
-
         # Create a button to submit the form
         submit_button = tk.Button(self.frame, text="Submit", command=self.submit)
         submit_button.pack()
@@ -332,6 +306,7 @@ class StockEntryForm:
         self.price_entry.delete(0, tk.END)
         self.parent.destroy()
         self.state = 0      
+        self.ui.refreshMenu()
 
 class HoverButton(tk.Button):
     def __init__(self, master, **kw):
@@ -398,7 +373,7 @@ class ScrolledFrame(tk.Frame):
     def update_scrollregion(self):
         self.frame.update_idletasks()
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
-   
+
 class Log(tk.Frame):
     def __init__(self, parent, max_length=100, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
@@ -580,8 +555,7 @@ class NFC():
     def stop(self):
         self.stop_event.set()
         self.state = False
-        
-        
+            
     def start_server(self):
         self.loggedin = False
         while self.state:

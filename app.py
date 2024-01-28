@@ -1,14 +1,11 @@
 #! /usr/bin/env python3
 #  -*- coding: utf-8 -*-
-
-
 import tkinter as tk
 from datetime import datetime
 from tkinter import simpledialog
 from tkcalendar import DateEntry
 from tkinter.constants import *
 from support import *      
-
     
 class Toplevel1:       
     def __init__(self, top=None):
@@ -19,16 +16,13 @@ class Toplevel1:
         #entry_vars
         self.NameEntryText = tk.StringVar()
         self.HouseEntryText = tk.StringVar()   
-        self.MPEntryText = tk.StringVar()
+        self.EmailEntryText = tk.StringVar()
         self.NumberEntryText = tk.StringVar()
         self.NLimitEntryText = tk.StringVar()
         self.BalanceEntryText = tk.StringVar()
         self.DOBEntryText = tk.StringVar()
         self.CardEntryText = tk.StringVar()
-        self.Order = tk.StringVar()
-
-        
-        
+              
         #B1,B2,B3,B5,B10,B15 = amount of 1,2,3,5,10,15 za2toot catigories in cart
         self.B1 = 0
         self.B2 = 0
@@ -52,7 +46,7 @@ class Toplevel1:
         self.UID = None
         self.Name = None
         self.House = None
-        self.MP = None
+        self.Email = None
         self.Number = None
         self.limit = None
         self.Balance = None
@@ -65,6 +59,9 @@ class Toplevel1:
         self.customers = self.db.getCustomers()
         self.stocks = self.db.getStocks()
         self.purchases = self.db.getPurchases()
+        
+        #init orders list
+        self.orders = []
         
         #Menue / Reciept init
         self.reciept = ""
@@ -84,8 +81,7 @@ class Toplevel1:
         top.configure(highlightbackground="#d9d9d9")
         top.configure(highlightcolor="black")
         self.top = top
-        
-        
+                
         #UI starts here
         self.Frame1 = tk.Frame(self.top)
         self.Frame1.place(relx=0.009, rely=0.013, relheight=0.954, relwidth=0.156)
@@ -355,10 +351,10 @@ class Toplevel1:
         self.HouseLabel.configure(font=("forte", 10)) 
         self.HouseLabel.configure(text='''House:''')
         
-        self.MPLabel = Label(self.CustomerDetailsFrame)
-        self.MPLabel.place(relx=0.017, rely=0.295, height=34, width=75)
-        self.MPLabel.configure(font=("forte", 10)) 
-        self.MPLabel.configure(text='''M-Points:''')
+        self.EmailLabel = Label(self.CustomerDetailsFrame)
+        self.EmailLabel.place(relx=0.07, rely=0.295, height=34, width=75)
+        self.EmailLabel.configure(font=("forte", 10)) 
+        self.EmailLabel.configure(text='''Email:''')
         
         self.NumberLabel = Label(self.CustomerDetailsFrame)
         self.NumberLabel.place(relx=0.033, rely=0.395, height=34, width=64)
@@ -413,18 +409,18 @@ class Toplevel1:
         self.HouseEntry.configure(selectforeground="black")
         self.HouseEntry.configure(state="readonly")
         
-        self.MPEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.MPEntryText)
-        self.MPEntry.place(relx=0.214, rely=0.318, height=20, relwidth=0.622)
-        self.MPEntry.configure(background="white")
-        self.MPEntry.configure(disabledforeground="#a3a3a3")
-        self.MPEntry.configure(font="TkFixedFont")
-        self.MPEntry.configure(foreground="#000000")
-        self.MPEntry.configure(highlightbackground="#d9d9d9")
-        self.MPEntry.configure(highlightcolor="black")
-        self.MPEntry.configure(insertbackground="black")
-        self.MPEntry.configure(selectbackground="#c4c4c4")
-        self.MPEntry.configure(selectforeground="black")
-        self.MPEntry.configure(state="readonly")
+        self.EmailEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.EmailEntryText)
+        self.EmailEntry.place(relx=0.214, rely=0.318, height=20, relwidth=0.622)
+        self.EmailEntry.configure(background="white")
+        self.EmailEntry.configure(disabledforeground="#a3a3a3")
+        self.EmailEntry.configure(font="TkFixedFont")
+        self.EmailEntry.configure(foreground="#000000")
+        self.EmailEntry.configure(highlightbackground="#d9d9d9")
+        self.EmailEntry.configure(highlightcolor="black")
+        self.EmailEntry.configure(insertbackground="black")
+        self.EmailEntry.configure(selectbackground="#c4c4c4")
+        self.EmailEntry.configure(selectforeground="black")
+        self.EmailEntry.configure(state="readonly")
         
         self.NumberEntry = tk.Entry(self.CustomerDetailsFrame, textvariable=self.NumberEntryText)
         self.NumberEntry.place(relx=0.214, rely=0.419, height=20, relwidth=0.622)
@@ -573,7 +569,7 @@ class Toplevel1:
             amount_label.pack(side="left")
             reduce_button = tk.Button(stock1, text="-", width=3, command=lambda s=stock: self.decrement(s))
             reduce_button.pack(side="left")            
-            split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+            split = tk.Label(self.StocksList.frame, text="----------------------------------")
             split.pack(padx=10, pady=3)       
         self.StocksList.update_scrollregion()
         
@@ -601,42 +597,121 @@ class Toplevel1:
         self.LogList.configure(relief="groove")
         self.LogList.configure(background="black")
         
-        self.orderLabel = tk.Label(self.LogFrame)
-        self.orderLabel.place(relx=0.39, rely=0.465, height=23, width=88)
-        self.orderLabel.configure(anchor='w')
-        self.orderLabel.configure(font=("forte", 14))
-        self.orderLabel.configure(background="black")
-        self.orderLabel.configure(compound='left')
-        self.orderLabel.configure(disabledforeground="black")
-        self.orderLabel.configure(foreground="Gold")
-        self.orderLabel.configure(text='''Order''')
+        self.ordersLabel = tk.Label(self.LogFrame)
+        self.ordersLabel.place(relx=0.39, rely=0.465, height=23, width=88)
+        self.ordersLabel.configure(anchor='w')
+        self.ordersLabel.configure(font=("forte", 14))
+        self.ordersLabel.configure(background="black")
+        self.ordersLabel.configure(compound='left')
+        self.ordersLabel.configure(disabledforeground="black")
+        self.ordersLabel.configure(foreground="Gold")
+        self.ordersLabel.configure(text='''Orders''')
         
         self.orderListHolder = ScrolledFrame(self.LogFrame)
         self.orderListHolder.place(relx=0.05, rely=0.500, relheight=0.4, relwidth=0.905) 
-        self.orderList = tk.Label(self.orderListHolder, textvariable=self.Order)
         
-        self.orderList = tk.Label(self.LogFrame, textvariable=self.Order)
-        self.orderList.place(relx=0.05, rely=0.500, relheight=0.4, relwidth=0.905)
-        self.orderList.configure(background="white")
-        self.orderList.configure(font="TkFixedFont")
-        self.orderList.configure(foreground="#000000")
-        self.orderList.configure(highlightbackground="#d9d9d9")
-        self.orderList.configure(highlightcolor="black")
-        self.orderList.configure(state="normal")
+        self.orderList = ScrolledFrame(self.LogFrame)
+        self.orderList.place(relx=0.05, rely=0.500, relheight=0.4, relwidth=0.905) 
+        self.orderList.update_scrollregion()
         
-        self.PayButton = HoverButton(self.LogFrame)
-        self.PayButton.place(relx=0.15, rely=0.909, relheight=0.072, relwidth=0.700)
-        self.PayButton.configure(command=self.Pay)
-        self.PayButton.configure(text='''Pay''')
+        self.AddOrderButton = HoverButton(self.LogFrame)
+        self.AddOrderButton.place(relx=0.15, rely=0.909, relheight=0.072, relwidth=0.700)
+        self.AddOrderButton.configure(command=self.addOrder)
+        self.AddOrderButton.configure(text='''Add Order''')
         
         self.Reset()
+        
+    def addOrder(self):
+        if self.UID and self.user:
+            if (self.Balance + self.limit) >= self.tot: 
+                self.orders.append(self.reciept)
+                # Update the displayed orders
+                self.updateOrderList()
+                self.Reset()
+        elif self.UID and not self.user:
+            self.Logger("Login required!")
+        elif not self.UID and not self.user:
+            self.Logger("Unothorized Access Trial!")
+            pass
+        else:
+            self.Logger("Customer selection required!",verbose=True)
+            
+    def updateOrderList(self):
+        # Clear the existing orders in the GUI
+        for widget in self.orderList.frame.winfo_children():
+            widget.destroy()
 
+        # Add the updated orders to the GUI
+        for order in self.orders:
+            # Skip first 3 lines and last 2 lines
+            order_lines = order.split('\n')[0:-2]
+
+            orderframe = ttk.Frame(self.orderList.frame)
+            orderframe.pack(padx=3, pady=3)
+
+            for line in order_lines:
+                orderText = tk.Label(orderframe, text=line)
+                orderText.pack(padx=10, pady=3)
+
+            confirm_button = tk.Button(orderframe, text="confirm", width=20, command=lambda o=order: self.payOrder(o), bg="green", fg="white", activeforeground="black")
+            confirm_button.pack(padx=10, pady=3)
+            confirm_button.bind("<Enter>", lambda event, button=confirm_button: button.config(fg="black"))
+            confirm_button.bind("<Leave>", lambda event, button=confirm_button: button.config(fg="white"))
+
+            cancel_button = tk.Button(orderframe, text="cancel", width=20, command=lambda o=order: self.cancelOrder(o), bg="red", fg="white", activeforeground="black")
+            cancel_button.pack(padx=10, pady=1)
+            cancel_button.bind("<Enter>", lambda event, button=cancel_button: button.config(fg="black"))
+            cancel_button.bind("<Leave>", lambda event, button=cancel_button: button.config(fg="white"))
+
+            split = tk.Label(self.orderList.frame, text="----------------------------------")
+            split.pack(padx=10, pady=2)
+            
+        # Update the scroll region after adding new widgets
+        self.orderList.update_scrollregion()
+    
+    def payOrder(self, order):
+        customer = self.db.getCustomerID(str(order[0]))[0]
+        balance = customer[7]
+        limit = customer[6]
+        amount = int(order.split('\n')[-3].split(': ')[1])
+
+        if self.user:
+            # Check if the customer has enough balance
+            if (balance + limit) >= amount:
+                try:
+                    # Update the customer balance in the database
+                    self.db.editCustomer(customer[0], None, None, None, None, None, None, balance - amount, None)
+                    # Add sale record to the database
+                    self.db.addSale(str(self.user), customer[0], amount, order)
+                    #Log the transaction
+                    self.Logger(f"Payment:\n Amount: {amount}\n Customer: {customer[3]}\n Successful!", verbose=True)
+                    # Remove the order from the list
+                    self.orders.remove(order)
+                    # Update the order list in the GUI
+                    self.updateOrderList()
+                    # Reset GUI
+                    self.Reset()
+                except Exception as e:
+                    self.Logger(f"Payment:\n Amount: {amount}\n Customer: {customer[3]}\n Unsuccessful!\nError: {str(e)}", verbose=True)
+            else:
+                self.Logger("Not enough balance!", verbose=True)
+        elif self.UID and not self.user:
+            self.Logger("Login required!")
+        elif not self.UID and not self.user:
+            self.Logger("Unauthorized Access Trial!")
+        else:
+            self.Logger("Customer selection required!", verbose=True)
+
+    def cancelOrder(self, order):
+        if self.user:
+            # Remove the order from the list
+            self.orders.remove(order)
+            # Update the order list in the GUI
+            self.updateOrderList()
+        
     def update_reciept(self):
-        self.Order.set("")
         if self.user and self.Name:
-            self.reciept = "\n"
-            self.reciept += "\nCashier: " + self.user
-            self.reciept += "\nCustomer: " + self.Name
+            self.reciept = str(self.UID) + "\nCustomer: " + self.Name
             self.tot = 0
             for stock_name, stock_value in self.values.items():
                 if int(stock_value.get()) > 0:   
@@ -658,8 +733,6 @@ class Toplevel1:
             self.reciept += "\nTotal: " + str(self.tot)
             self.reciept += "\nBalance Before: " + str(self.Balance)
             self.reciept += "\nBalance After: " + str(self.Balance - self.tot)
-            self.Order.set(self.reciept)
-            self.orderListHolder.update_scrollregion()
             
     def increment(self, stock):
         if self.user and self.Name:
@@ -677,7 +750,7 @@ class Toplevel1:
     def Add_Card(self):
         if self.Card and self.user:
             try:
-                self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
+                self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.Email)
                 self.Logger(f"Card: {self.Card} \nAdded to UID: {self.UID}") 
                 self.Logger(f"Done!", verbose = True) 
             except:
@@ -687,7 +760,7 @@ class Toplevel1:
         if self.Card and self.user:
             self.Card = ""
             try:  
-                self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
+                self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.Email)
                 self.Logger("Card deleted successfully!",verbose=True)
             except:
                 self.Logger("Card does not exist!",verbose=True) 
@@ -696,7 +769,7 @@ class Toplevel1:
         self.stocks = self.db.getStocks()
         stock = self.stocks[len(self.stocks)-1]
         self.values[stock] = tk.IntVar(value=0)  # Initialize values to 0
-        split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+        split = tk.Label(self.StocksList.frame, text="----------------------------------")
         split.pack(padx=10, pady=3)
         stock1 = ttk.Frame(self.StocksList.frame)
         stock1.pack(padx=3, pady=8)
@@ -708,7 +781,7 @@ class Toplevel1:
         amount_label.pack(side="left")
         reduce_button = tk.Button(stock1, text="-", width=3, command=lambda s=stock: self.decrement(s))
         reduce_button.pack(side="left")            
-        split = tk.Label(self.StocksList.frame, text="------------------------------------------")
+        split = tk.Label(self.StocksList.frame, text="----------------------------------")
         split.pack(padx=10, pady=3)       
         self.StocksList.update_scrollregion()
         
@@ -718,6 +791,32 @@ class Toplevel1:
             a = StockEntryForm(self.user, self)
             a.start()     
         
+    def refreshMenu(self):
+        self.stocks = self.db.getStocks()
+        # Clear the existing stocks in the GUI
+        for widget in self.StocksList.frame.winfo_children():
+            widget.destroy()
+        for stock in self.stocks:
+            self.values[stock] = tk.IntVar(value=1)  
+            split = tk.Label(self.StocksList.frame, text="  ")
+            split.pack(padx=10, pady=3)
+            stock1 = ttk.Frame(self.StocksList.frame)
+            stock1.pack(padx=3, pady=8)
+            name_label = tk.Label(stock1, text=stock[0])
+            name_label.pack(padx=10, pady=3)            
+            add_button = tk.Button(stock1, text="+", width=3, command=lambda s=stock: self.increment(s))
+            add_button.pack(side="left")
+            amount_label = tk.Label(stock1, textvariable=self.values[stock], width=23)
+            amount_label.pack(side="left")
+            reduce_button = tk.Button(stock1, text="-", width=3, command=lambda s=stock: self.decrement(s))
+            reduce_button.pack(side="left")            
+            split = tk.Label(self.StocksList.frame, text="----------------------------------")
+            split.pack(padx=10, pady=3)       
+
+        # Update the scroll region after adding new widgets
+        self.StocksList.update_scrollregion()
+        self.Reset()
+        
     def Add_Customer(self):
         if self.admin:
             try:
@@ -726,9 +825,9 @@ class Toplevel1:
                                 self.NameEntryText.get(),
                                 self.DOBEntryText.get(),
                                 self.NumberEntryText.get(),
-                                credit_limit=self.NLimitEntryText.get(),
-                                balance=self.BalanceEntryText.get(),
-                                m_points=self.MPEntryText.get()
+                                self.NLimitEntryText.get(),
+                                self.BalanceEntryText.get(),
+                                self.EmailEntryText.get()
                                 )
                 self.CustomerList.update_treeview()
             except:
@@ -750,45 +849,37 @@ class Toplevel1:
 
     def Edit_Customer(self):
         if self.admin:
-            try: 
-                self.db.editCustomer(customer_id =self.UID,
-                                    house_id =self.HouseEntryText.get(),
-                                    card_id=self.CardEntryText.get(),
-                                    name=self.NameEntryText.get(),
-                                    dob=self.DOBEntryText.get(),
-                                    number=self.NumberEntryText.get(),
-                                    credit_limit=self.NLimitEntryText.get(),
-                                    balance=self.BalanceEntryText.get(),
-                                    m_points=self.MPEntryText.get()
-                                    )
-                self.CustomerList.update_treeview()
-            except:
-                self.Logger(f"Unable to update customer\n ID: {self.UID}",verbose=True)
-
-    def Pay(self):
-        if self.UID and self.user:
-            if (self.Balance + self.limit) >= self.tot: 
-                try:
-                    self.Balance -= self.tot
-                    self.BalanceEntryText.set(f"{self.Balance}")
-                    self.db.editCustomer(self.UID, self.House, self.Card, self.Name, self.DOB, self.Number, self.limit, self.Balance, self.MP)
-                    self.db.addSale(str(self.user), self.UID, self.tot, self.reciept)
-                    self.Logger(f"Payment:\n Amount: {self.tot}\n Customer {self.UID}: {self.Name}\n Successful!",verbose=True)
-                    self.Reset()
-                except:
-                     self.Logger(f"Payment:\n Amount: {self.tot}\n Customer {self.UID}: {self.Name}\n Un-successful!",verbose=True)  
+            # Check if any of the entry texts are empty
+            if any(value == "" for value in [
+                self.HouseEntryText.get(),
+                self.CardEntryText.get(),
+                self.NameEntryText.get(),
+                self.DOBEntryText.get(),
+                self.NumberEntryText.get(),
+                self.NLimitEntryText.get(),
+                self.BalanceEntryText.get(),
+                self.EmailEntryText.get()
+            ]):
+                self.Logger("Please fill in all fields before updating \nthe customer.", verbose=True)
             else:
-                self.Logger("Not enough balance!",verbose=True)      
-        elif self.UID and not self.user:
-            self.Logger("Login required!")
-        elif not self.UID and not self.user:
-            self.Logger("Unothorized Access Trial!")
-            pass
-        else:
-            self.Logger("Customer selection required!",verbose=True)
+                try:
+                    self.db.editCustomer(
+                        self.UID,
+                        self.HouseEntryText.get(),
+                        self.CardEntryText.get(),
+                        self.NameEntryText.get(),
+                        self.DOBEntryText.get(),
+                        self.NumberEntryText.get(),
+                        self.NLimitEntryText.get(),
+                        self.BalanceEntryText.get(),
+                        self.EmailEntryText.get()
+                    )
+                    self.CustomerList.update_treeview()
+                except Exception as e:
+                    self.Logger(f"Unable to update customer\n ID: {self.UID}\nError: {str(e)}", verbose=True)
 
     def TopUP(self):
-        if self.admin:
+        if self.admin and self.UID:
             amount = simpledialog.askfloat("Top-Up", "Enter the top-up amount:")
             if amount is None:
                 return
@@ -833,7 +924,7 @@ class Toplevel1:
         self.UID = None
         self.Name = None
         self.House = None
-        self.MP = None
+        self.Email = None
         self.Number = None
         self.limit = None
         self.Balance = None
@@ -846,13 +937,12 @@ class Toplevel1:
         self.NumberEntryText.set("")
         self.NLimitEntryText.set("")
         self.BalanceEntryText.set("")
-        self.MPEntryText.set("")
+        self.EmailEntryText.set("")
         
         self.top.configure(background="Black")
         if self.user:
             self.top.configure(background="Green")
             self.CustomerList.update_treeview()
-            self.Order.set("")
             for stock in self.stocks:
                 self.values[stock].set(0)
 
@@ -996,7 +1086,7 @@ class Toplevel1:
             self.BalanceEntry.configure(state="normal")
             self.NLimit.configure(state="normal")
             self.NumberEntry.configure(state="normal")
-            self.MPEntry.configure(state="normal")
+            self.EmailEntry.configure(state="normal")
             self.HouseEntry.configure(state="normal")
             self.NameEntry.configure(state="normal")
         self.Logger(f"user: {self.user} logged in!")
@@ -1004,9 +1094,17 @@ class Toplevel1:
             
     def NFClogout(self):
         self.Logger(f"user: {self.user} logged out!")
-        self.user == None
-        self.admin = False
         self.Reset()
+        self.user = None
+        self.admin = False
+        self.CardEntry.configure(state="readonly")
+        self.DOBEntry.configure(state="readonly")
+        self.BalanceEntry.configure(state="readonly")
+        self.NLimit.configure(state="readonly")
+        self.NumberEntry.configure(state="readonly")
+        self.EmailEntry.configure(state="readonly")
+        self.HouseEntry.configure(state="readonly")
+        self.NameEntry.configure(state="readonly")
         self.CustomerList.clear_treeview()
         self.top.configure(background="Black")
                
@@ -1023,7 +1121,7 @@ class Toplevel1:
         self.UID = args[0]
         self.Name = args[3]
         self.House = args[1]
-        self.MP = args[8]
+        self.Email = args[8]
         self.Number = args[5]
         self.limit = args[6]
         self.Balance = args[7]
@@ -1032,7 +1130,7 @@ class Toplevel1:
             
         self.NameEntryText.set(self.Name)
         self.HouseEntryText.set(self.House)
-        self.MPEntryText.set(self.MP)  
+        self.EmailEntryText.set(self.Email)  
         self.NumberEntryText.set(self.Number)
         self.NLimitEntryText.set(self.limit)
         self.BalanceEntryText.set(self.Balance)
@@ -1053,13 +1151,10 @@ class Toplevel1:
     def on_exit(self):
         self.nfc.stop()
         root.destroy()
-        
-
-    
+            
 if __name__ == '__main__':
     root = tk.Tk()
     _top1 = root
     _w1 = Toplevel1(_top1)
     root.protocol( 'WM_DELETE_WINDOW' , _w1.on_exit)    
     root.mainloop()
-
